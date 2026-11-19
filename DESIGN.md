@@ -1,36 +1,76 @@
-# LDIF Builder design system v3: Soft studio
+# LDIF Builder design system
 
-The interface follows the Soft studio brief: a tinted frame (the space) holds a white sheet that floats inside it. The previous v2 design is preserved in Git history.
+This design replaces the former dark/neon interface. `style.css` is the only
+stylesheet; `theme.js` provides shared interface behavior, with no accent picker,
+stored theme preference, decorative animation, external fonts, or theme overrides.
 
 ## Brand layer
 
 | Item | Decision |
 | --- | --- |
-| Product | LDIF Builder, browser tools for preparing directory data |
-| Colour | One colour. Green accent (light #2f8f2f, dark #66ff00) on a neutral frame (light #eef1f5, dark #080808), taken from the earlier themed design. No space switching |
-| Font | Self-hosted Figtree variable (OFL, `assets/fonts`), with Inter, system sans and Noto Sans fallbacks. System monospace for code only |
-| Logo | Fluent Document, 16px, white on a 26px accent tile |
-| Theme default | Follow system. Light, Dark and System controls save only the UI preference |
-| Language and direction | English, LTR. Logical CSS properties are used for spacing |
-| Domain | Directory data preparation. No LDAP connectivity, server validation or compliance claims |
-| Voice | Warm, plain, specific. Sentence case, no exclamation marks |
+| Product | LDIF Builder — browser-based tools for preparing directory data |
+| Audience | Directory administrators and operations teams; precise language, keyboard and pointer support |
+| Density | Default: 14px UI text, 36px controls; 44px controls on touch devices |
+| Accent | Deep teal, #0b5d7f; strong #094963; soft #e7eff2 |
+| Font | Inter when installed, with system sans and Noto Sans fallbacks; no font download |
+| Logo | Neutral outline document mark, 32px in the navigation rail |
+| Language | English, left-to-right; logical CSS properties support future RTL work |
+| Locale and time | Browser locale; these screens do not request dates or times |
+| Domain | Directory data preparation; no new regulated-domain or certification claims |
+| Voice | Exact and plain-spoken |
 
-## How the brief is applied
+## Screens and states
 
-- **Frame and sheet.** `body` uses `--frame`. The sidebar has no background of its own. `.main` is the 14px-radius sheet, inset 8px, with the sheet shadow. Under 900px the sidebar moves behind a menu button and the sheet goes full bleed.
-- **One colour.** `--frame`, `--frame-deep`, `--accent` and `--accent-soft` are fixed per theme. The frame is neutral, and green is used only for actions, selection, focus, progress and the page-icon tile.
-- **Bold titles and pages.** `theme.js` adds the 60px page-icon tile and a properties list (Input, Output, Processing) to each tool page, so every view reads as icon, title, one-line description, properties, then blocks. Workflow steps are stacked sections with 20px/700 titles.
-- **Tags.** `.tag-green|amber|rose|gray` are the only tag colours; blue and violet were removed. Error-fixer statuses map fixed to green and unresolved to rose, always with a word.
-- **Components.** Buttons (primary, soft default, ghost, danger), 36px inputs, rounded-square checkboxes whose tick draws in, segmented view switch for tool modes, pill progress, properties list, callouts on the space colour, key caps, command palette, toast.
-- **Icons.** Fluent UI System Icons only, Regular by default and Filled when selected, at native sizes (16 in tags and properties, 20 in the UI, 32 inside page tiles). SVGs are vendored in `assets/icons` with their MIT licence and mirrored in `icons.js`.
-- **Motion.** One easing, `cubic-bezier(.2,.8,.2,1)`. Reduced motion removes animation.
+| Screen | Required states |
+| --- | --- |
+| Overview | Tool navigation, clearly labeled sample preview, help/privacy/security dialogs |
+| CSV to LDIF | Empty upload, reading/error, loaded file, create/modify selection, group operations, field mapping, custom-attribute dialog, validation, output, copy confirmation/error, download, reset |
+| LDIF to CSV | Empty/upload/paste, reading/error, attribute selection, optional split editing and validation, preview, copy confirmation/error, download, reset |
+| LDIF cleaner | Attribute-update and comparison modes, empty/upload/reading/error, operation editor, duplicate/no-match results, generated output, downloads, reset |
+| Error fixer | Empty/upload/reading/error, error-log input, analysis, missing-value input, fixed/unresolved results with text labels, output, reports, reset |
+| Shared | Hover/focus/active/disabled controls, keyboard file selection, keyboard mapping, offline notice retaining work, responsive navigation, native dialog focus trapping and return, reduced motion |
 
-## Scope notes
+## Foundations and components
 
-- Collaboration avatars, sharing, favourites and edited-at times are not shown. This is a local file tool and those would imply features that do not exist.
-- Toasts are used for copy confirmation. Reset actions clear in-memory state and cannot be restored, so they do not show an Undo toast. Errors stay inline.
-- Tool pages keep an 820px reading column. Wide mapping editors stack below 1024px.
+All colour, typography, space, shape, elevation, and motion tokens live at the
+start of `style.css`. Main sections use whitespace and hairlines. Navigation,
+buttons, forms, upload targets, output previews, result rows, and dialogs share
+one implementation across the product.
+
+New composed components are the workspace rail/header/footer, overview tool row,
+explicitly labeled sample conversion preview, and data-handling/help dialogs.
+File reading uses a delayed progress indicator. Validation and errors stay inline;
+copy feedback appears beside the preview action. No product data is sent externally.
+
+## Intentional limits and brief exceptions
+
+- The brief requires company contact, Terms, and Status links. No company identity,
+  contact address, legal documents, or status service was supplied. These have not
+  been fabricated. The footer provides the real guide and factual Privacy and
+  Security information; company destinations can be added when available.
+- Existing conversion, schema-validation, and persistence limits still apply.
+  The redesign does not claim server validation, saved work, or LDAP connectivity.
+- There is no arbitrary file-size limit in the existing tool. Upload guidance states
+  accepted extensions and the actual constraint: available browser memory.
+- The filled product logo is replaced by a neutral outline mark. System fonts avoid
+  external requests and webfont layout shifts when Inter is not installed.
+
+The sample preview uses reserved example.com addresses and is explicitly marked
+as sample data. Version 1.0.0 is retained from the existing interface.
 
 ## Verification
 
-Checked in headless Edge on 19 Nov 2026: Overview and tool pages in light and dark, the Lilac space, the command palette, the toast, and a 390px layout. Conversion modules (`app.js`, `ldif-to-csv.js`, `ldif-cleaner.js`, `ldif-error-fixer.js`) are unchanged. This does not establish a complete WCAG or performance certification.
+Checked in headless Chromium on 19 Nov 2026:
+
+- All five pages reflow at 320, 360, 375, 720, 768, 1024, and 1440px.
+- Sample CSV mapping and LDIF generation, including modify mode and downloads.
+- LDIF paste, attribute selection, CSV downloads, and split-rule validation.
+- Cleaner attribute updates, duplicate comparison, and resulting counts.
+- Error matching, generated modify records, and fixed/unresolved results.
+- Custom-attribute validation, Escape, help-dialog focus return, keyboard uploads,
+  mapping focus retention, dynamically named fields, and loaded mobile editors.
+- Copy success and denied-clipboard feedback, offline notices, and reduced motion.
+- No page exceptions or external network requests in the exercised workflows.
+
+These checks establish the exercised browser behavior; they are not a complete
+accessibility, performance, or directory-schema certification.

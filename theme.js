@@ -1,48 +1,6 @@
-/* Shared workspace behavior; conversion modules keep their existing contracts. */
+/* Shared interface behavior. The identity is fixed; there are no theme overrides. */
 (() => {
   'use strict';
-
-  const icon = (name, size = 20, variant = 'regular') => window.ldifIcons?.[`${name}-${size}-${variant}`] || '';
-  const root = document.documentElement;
-  const systemTheme = matchMedia('(prefers-color-scheme: dark)');
-  function savePreference(key, value) {
-    try { localStorage.setItem(key, value); } catch { /* UI remains usable without storage. */ }
-  }
-  function setAppearance(preference) {
-    root.dataset.appearance = preference;
-    root.dataset.theme = preference === 'system' ? (systemTheme.matches ? 'dark' : 'light') : preference;
-    document.querySelectorAll('[data-appearance]').forEach(button => {
-      if (button !== root) button.setAttribute('aria-pressed', String(button.dataset.appearance === preference));
-    });
-    savePreference('ldif-appearance', preference);
-  }
-  function toast(message, { undo } = {}) {
-    let region = document.querySelector('.toast-region');
-    if (!region) {
-      region = document.createElement('div');
-      region.className = 'toast-region';
-      region.setAttribute('role', 'status');
-      region.setAttribute('aria-live', 'polite');
-      document.body.append(region);
-    }
-    const item = document.createElement('div');
-    item.className = 'toast';
-    item.innerHTML = `${icon('CheckmarkCircle', 20, 'filled')}<span class="toast-message"></span>`;
-    item.querySelector('.toast-message').textContent = message;
-    const dismiss = () => item.remove();
-    if (undo) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.textContent = 'Undo';
-      button.addEventListener('click', () => { undo(); dismiss(); });
-      item.append(button);
-    }
-    region.replaceChildren(item);
-    setTimeout(dismiss, 5000);
-  }
-  systemTheme.addEventListener('change', () => {
-    if (root.dataset.appearance === 'system') setAppearance('system');
-  });
 
   const information = {
     help: {
@@ -58,7 +16,6 @@
       title: 'How your files are handled',
       content: `<p>File contents are read and processed in your browser. These tools do not upload your file contents or connect to your directory.</p>
         <p>Downloads are saved to the location chosen by your browser. Closing or reloading the page clears the current workspace; the app does not save your progress.</p>
-        <p>Only your appearance and navigation preferences are stored on this device. Your uploaded files, pasted content, mappings, and results are not saved by the app.</p>
         <p>Use your organisation's approved browser and storage location when working with directory data.</p>`,
     },
     security: {
@@ -99,8 +56,7 @@
       error.setAttribute('role', 'alert');
       container.prepend(error);
     }
-    error.innerHTML = icon('ErrorCircle', 16);
-    error.append(document.createTextNode(message));
+    error.textContent = message;
     if (input) {
       input.setAttribute('aria-invalid', 'true');
       const descriptions = new Set((input.getAttribute('aria-describedby') || '').split(' ').filter(Boolean));
@@ -140,11 +96,7 @@
     const delay = setTimeout(() => {
       progress = document.createElement('progress');
       progress.setAttribute('aria-label', 'Reading file');
-      const skeleton = document.createElement('span');
-      skeleton.className = 'skeleton-line';
-      skeleton.setAttribute('aria-hidden', 'true');
-      skeleton.style.display = 'block';
-      status.replaceChildren(document.createTextNode('Reading file '), progress, skeleton);
+      status.replaceChildren(document.createTextNode('Reading file '), progress);
     }, 300);
     reader.addEventListener('progress', (event) => {
       if (progress && event.lengthComputable) {
@@ -155,17 +107,6 @@
     reader.addEventListener('loadend', () => {
       clearTimeout(delay);
       zone?.removeAttribute('aria-busy');
-      if (!reader.error && zone) {
-        zone.querySelector('.file-updated')?.remove();
-        const time = document.createElement('time');
-        time.className = 'file-updated';
-        const loaded = Date.now();
-        time.dataset.loaded = loaded;
-        time.dateTime = new Date(loaded).toISOString();
-        time.title = new Date(loaded).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-        zone.append(time);
-        updateFileTimes();
-      }
     }, { once: true });
     reader.addEventListener('error', () => {
       status.textContent = 'File could not be read.';
@@ -187,255 +128,22 @@
     try {
       if (!navigator.clipboard) throw new Error('Clipboard unavailable');
       await navigator.clipboard.writeText(text);
-      toast('Copied to clipboard');
-      button.innerHTML = icon('Checkmark');
-      button.title = 'Copied to clipboard';
-      button.setAttribute('aria-label', 'Copied to clipboard');
-      clearTimeout(button.copyTimer);
-      button.copyTimer = setTimeout(() => {
-        button.innerHTML = icon('Copy');
-        button.title = 'Copy to clipboard';
-        button.setAttribute('aria-label', 'Copy to clipboard');
-      }, 1500);
+      const header = button.closest('.preview-header');
+      let confirmation = header.querySelector('.copy-confirmation');
+      if (!confirmation) {
+        confirmation = document.createElement('span');
+        confirmation.className = 'copy-confirmation';
+        confirmation.setAttribute('role', 'status');
+        header.insertBefore(confirmation, button);
+      }
+      confirmation.textContent = 'Copied to clipboard';
+      setTimeout(() => confirmation.remove(), 4000);
     } catch {
       showError(button, 'Clipboard access is unavailable. Select and copy the preview text, or download the file.');
     }
   }
 
-  window.ldifUi = { showError, askAttribute, watchFileReader, readFile, copyText, toast };
-
-  // The same discoverable actions are available on every page.
-  const bar = document.querySelector('.workspace-bar');
-  const breadcrumb = bar?.querySelector('.breadcrumb');
-  const sidebar = document.querySelector('.sidebar');
-  const shortcut = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
-  if (bar && breadcrumb) {
-    const workspaceLocation = document.createElement('div');
-    workspaceLocation.className = 'workspace-location';
-    sidebar.id = 'workspace-sidebar';
-    const menuToggle = document.createElement('button');
-    menuToggle.type = 'button';
-    menuToggle.className = 'btn-icon menu-toggle';
-    menuToggle.innerHTML = icon('Navigation');
-    menuToggle.title = 'Open navigation';
-    menuToggle.setAttribute('aria-label', 'Open navigation');
-    menuToggle.setAttribute('aria-controls', 'workspace-sidebar');
-    menuToggle.setAttribute('aria-expanded', 'false');
-    const scrim = document.createElement('div');
-    scrim.className = 'nav-scrim';
-    scrim.addEventListener('click', () => setNavOpen(false));
-    document.querySelector('.app').append(scrim);
-    function setNavOpen(open) {
-      root.classList.toggle('nav-open', open);
-      menuToggle.setAttribute('aria-expanded', String(open));
-      if (open) sidebar.querySelector('.nav-item.active, .nav-item')?.focus();
-      else if (sidebar.contains(document.activeElement)) menuToggle.focus();
-    }
-    menuToggle.addEventListener('click', () => setNavOpen(!root.classList.contains('nav-open')));
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && root.classList.contains('nav-open') && !document.querySelector('dialog[open]')) setNavOpen(false);
-    });
-    const railToggle = document.createElement('button');
-    railToggle.type = 'button';
-    railToggle.className = 'btn-icon rail-toggle';
-    function updateRail() {
-      const collapsed = root.classList.contains('rail-collapsed');
-      railToggle.innerHTML = icon(collapsed ? 'PanelLeftExpand' : 'PanelLeftContract');
-      railToggle.title = collapsed ? 'Expand navigation' : 'Collapse navigation';
-      railToggle.setAttribute('aria-label', railToggle.title);
-      railToggle.setAttribute('aria-expanded', String(!collapsed));
-      railToggle.setAttribute('aria-controls', 'workspace-sidebar');
-    }
-    document.querySelectorAll('.nav-item, .logo').forEach(link => {
-      const label = link.textContent.trim();
-      link.title = label;
-      link.setAttribute('aria-label', label);
-    });
-    railToggle.addEventListener('click', () => {
-      root.classList.toggle('rail-collapsed');
-      savePreference('ldif-navigation', root.classList.contains('rail-collapsed') ? 'collapsed' : 'expanded');
-      updateRail();
-    });
-    updateRail();
-    workspaceLocation.append(menuToggle, railToggle, breadcrumb);
-    bar.prepend(workspaceLocation);
-
-    // The brand mark is a small tile in the accent.
-    const logoIcon = sidebar.querySelector('.logo-icon');
-    if (logoIcon) logoIcon.innerHTML = icon('Document', 16);
-
-    // Search opens the command palette from the top of the frame.
-    const search = document.createElement('button');
-    search.type = 'button';
-    search.className = 'command-trigger';
-    search.innerHTML = `<span>${icon('Search')}<span class="trigger-label">Search</span></span><kbd>${shortcut}</kbd>`;
-    search.title = `Search pages and actions (${shortcut})`;
-    search.setAttribute('aria-label', `Search pages and actions, ${shortcut}`);
-    search.setAttribute('aria-haspopup', 'dialog');
-    search.setAttribute('aria-keyshortcuts', 'Control+k Meta+k');
-    search.addEventListener('click', () => { setNavOpen(false); openCommands(); });
-    sidebar.querySelector('.logo')?.after(search);
-
-    const actions = document.createElement('div');
-    actions.className = 'workspace-actions';
-    const local = document.createElement('span');
-    local.className = 'tag tag-green';
-    local.innerHTML = `${icon('LockClosed', 16)}In your browser`;
-    local.title = 'File contents are processed in this browser and are not uploaded.';
-    const appearance = document.createElement('div');
-    appearance.className = 'appearance-control';
-    appearance.setAttribute('role', 'group');
-    appearance.setAttribute('aria-label', 'Appearance');
-    for (const [value, label, glyph] of [['light', 'Light theme', 'WeatherSunny'], ['dark', 'Dark theme', 'WeatherMoon'], ['system', 'Follow system theme', 'Desktop']]) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'btn-icon';
-      button.dataset.appearance = value;
-      button.title = label;
-      button.setAttribute('aria-label', label);
-      button.innerHTML = icon(glyph);
-      button.addEventListener('click', () => setAppearance(value));
-      appearance.append(button);
-    }
-    actions.append(local, appearance);
-    bar.append(actions);
-    setAppearance(root.dataset.appearance || 'system');
-  }
-
-  // Every page opens like a document: icon tile, title, one-line description, properties.
-  const pageProps = {
-    'csv-to-ldif': { glyph: 'Document', input: 'CSV file', output: 'LDIF file' },
-    'ldif-to-csv': { glyph: 'Table', input: 'LDIF file or pasted LDIF', output: 'CSV file' },
-    'ldif-cleaner': { glyph: 'Broom', input: 'LDIF file, plus a comparison file to remove entries', output: 'Updated LDIF file' },
-    'ldif-error-fixer': { glyph: 'ShieldCheckmark', input: 'Submitted LDIF and LDAP error output', output: 'Corrected LDIF file' },
-  };
-  const slug = window.location.pathname.split('/').pop().replace(/\.html$/, '') || 'index';
-  const pageHeader = document.querySelector('.header');
-  const pageConfig = pageProps[slug];
-  if (pageHeader && (pageConfig || slug === 'index')) {
-    const tile = document.createElement('div');
-    tile.className = 'page-icon';
-    tile.innerHTML = icon(pageConfig?.glyph || 'Home', 32);
-    pageHeader.firstElementChild.prepend(tile);
-  }
-  if (pageHeader && pageConfig) {
-    const props = document.createElement('div');
-    props.className = 'page-props';
-    const row = (glyph, label, value) => `<div class="prop"><dt>${icon(glyph, 16)}${label}</dt><dd>${value}</dd></div>`;
-    props.innerHTML = `<dl class="props">${row('ArrowUpload', 'Input', pageConfig.input)}${row('ArrowDownload', 'Output', pageConfig.output)}${row('LockClosed', 'Processing', '<span class="tag tag-green">In your browser</span>')}</dl>`;
-    pageHeader.after(props);
-  }
-
-  function openCommands() {
-    if (document.querySelector('dialog[open]')) return;
-    const commands = [...document.querySelectorAll('.nav-item')].map(link => ({
-      label: link.textContent.trim(),
-      description: link.getAttribute('aria-current') ? 'Current page' : (link.dataset.info ? 'Instructions and user guide' : 'Open page'),
-      group: 'Pages',
-      glyph: link.querySelector('svg')?.outerHTML || icon('Document'),
-      run: () => link.click(),
-    }));
-    const upload = [...document.querySelectorAll('.upload-zone')].find(zone => zone.getClientRects().length);
-    if (upload) commands.push({ label: 'Choose a source file', description: 'Open the file picker', group: 'Actions', glyph: icon('ArrowUpload', 24), run: () => upload.querySelector('input[type="file"]')?.click() });
-    for (const [label, value, glyph] of [['Use light theme', 'light', 'WeatherSunny'], ['Use dark theme', 'dark', 'WeatherMoon'], ['Follow system theme', 'system', 'Desktop']]) {
-      commands.push({ label, description: 'Change appearance on this device', group: 'Actions', glyph: icon(glyph), run: () => setAppearance(value) });
-    }
-    const dialog = createDialog('Search tools and actions', '');
-    dialog.classList.add('command-dialog');
-    dialog.innerHTML = `<h2 id="dialog-title" class="sr-only">Search tools and actions</h2>
-      <div class="command-search">${icon('Search')}<label for="command-query" class="sr-only">Search tools and actions</label><input id="command-query" placeholder="Search pages and actions" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="command-results" autofocus><button type="button" class="esc-key" aria-label="Close search" title="Close search (Esc)"><kbd>Esc</kbd></button></div>
-      <div id="command-results" class="command-results" role="listbox" aria-label="Tools and actions"></div>
-      <span id="command-count" class="sr-only" role="status"></span>
-      <div class="command-footer"><span><kbd>${icon('ArrowUp', 16)}</kbd><kbd>${icon('ArrowDown', 16)}</kbd>Move</span><span><kbd>${icon('ArrowEnterLeft')}</kbd>Open</span></div>`;
-    const input = dialog.querySelector('input');
-    const results = dialog.querySelector('.command-results');
-    let filtered = commands, selected = 0;
-    function select(index) {
-      selected = filtered.length ? (index + filtered.length) % filtered.length : -1;
-      results.querySelectorAll('[role="option"]').forEach((row, n) => row.setAttribute('aria-selected', String(n === selected)));
-      const row = results.querySelector(`[data-index="${selected}"]`);
-      if (row) { input.setAttribute('aria-activedescendant', row.id); row.scrollIntoView({ block: 'nearest' }); }
-      else input.removeAttribute('aria-activedescendant');
-    }
-    function render() {
-      const query = input.value.trim().toLowerCase();
-      filtered = commands.filter(command => `${command.label} ${command.description}`.toLowerCase().includes(query));
-      results.replaceChildren();
-      let group;
-      filtered.forEach((command, index) => {
-        if (command.group !== group) {
-          group = command.group;
-          const heading = document.createElement('div');
-          heading.className = 'command-group';
-          heading.setAttribute('role', 'presentation');
-          heading.textContent = group;
-          results.append(heading);
-        }
-        const row = document.createElement('button');
-        row.type = 'button'; row.className = 'command-option'; row.tabIndex = -1;
-        row.id = `command-option-${index}`; row.dataset.index = index;
-        row.setAttribute('role', 'option');
-        row.innerHTML = `${command.glyph}<span>${command.label}<span class="command-description">${command.description}</span></span><kbd>Enter</kbd>`;
-        row.addEventListener('click', () => { dialog.close(); command.run(); });
-        results.append(row);
-      });
-      if (!filtered.length) {
-        const empty = document.createElement('p');
-        empty.className = 'command-empty';
-        empty.textContent = 'Nothing matches. Try “CSV”, “cleaner”, or “theme”.';
-        results.append(empty);
-      }
-      dialog.querySelector('#command-count').textContent = `${filtered.length} actions available`;
-      select(0);
-    }
-    input.addEventListener('input', render);
-    input.addEventListener('keydown', event => {
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-        event.preventDefault(); if (filtered.length) select(selected + (event.key === 'ArrowDown' ? 1 : -1));
-      }
-      if (event.key === 'Enter' && filtered[selected]) {
-        event.preventDefault(); dialog.close(); filtered[selected].run();
-      }
-    });
-    dialog.querySelector('button').addEventListener('click', () => dialog.close());
-    dialog.showModal();
-    render();
-  }
-  document.addEventListener('keydown', event => {
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-      event.preventDefault(); openCommands();
-    }
-  });
-
-  // Empty states link to a useful next step rather than a dead end.
-  document.querySelectorAll('.empty-state').forEach(empty => {
-    const actions = document.createElement('div');
-    actions.className = 'empty-actions';
-    const choose = document.createElement('button');
-    choose.type = 'button'; choose.className = 'btn btn-secondary';
-    choose.textContent = 'Choose a source file';
-    choose.addEventListener('click', () => document.querySelector('.upload-zone input[type="file"]')?.click());
-    const help = document.createElement('button');
-    help.type = 'button'; help.className = 'btn-icon empty-help';
-    help.textContent = 'Learn more'; help.dataset.info = 'help';
-    actions.append(choose, help); empty.append(actions);
-  });
-
-  // Each loaded file has a truthful relative time and an exact tooltip.
-  const relativeTime = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
-  function updateFileTimes() {
-    document.querySelectorAll('.file-updated').forEach(time => {
-      const minutes = Math.max(0, Math.floor((Date.now() - Number(time.dataset.loaded)) / 60000));
-      let label = 'just now';
-      if (minutes >= 10080) label = new Date(Number(time.dataset.loaded)).toLocaleDateString();
-      else if (minutes >= 1440) label = relativeTime.format(-Math.floor(minutes / 1440), 'day');
-      else if (minutes >= 60) label = relativeTime.format(-Math.floor(minutes / 60), 'hour');
-      else if (minutes >= 1) label = relativeTime.format(-minutes, 'minute');
-      time.textContent = `Loaded ${label}`;
-    });
-  }
-  setInterval(updateFileTimes, 60000);
-  document.querySelectorAll('#resetBtn, #efResetBtn').forEach(button => button.addEventListener('click', () => document.querySelectorAll('.file-updated').forEach(time => time.remove())));
+  window.ldifUi = { showError, askAttribute, watchFileReader, readFile, copyText };
 
   document.addEventListener('click', (event) => {
     const trigger = event.target.closest('[data-info]');
