@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LDIF Error Fixer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z"
+                            fill="#0078D4" />
+                        <path d="M14 2V8H20" fill="#50E6FF" />
+                        <path d="M16 13H8V15H16V13ZM16 17H8V19H16V17ZM14 9H8V11H14V9Z" fill="white" />
+                    </svg>
+                </div>
+                <span>LDIF Builder</span>
+            </div>
+
+            <nav class="nav">
+                <a href="csv-to-ldif.html" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                        <path fill-rule="evenodd"
+                            d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    CSV → LDIF
+                </a>
+                <a href="ldif-to-csv.html" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    LDIF → CSV
+                </a>
+                <a href="ldif-cleaner.html" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                        <path fill-rule="evenodd"
+                            d="M4 5a2 2 0 012-2 1 1 0 000 2H3a1 1 0 00-1 1v9a2 2 0 002 2h10a2 2 0 002-2V8a1 1 0 100-2h1a2 2 0 012 2v9a4 4 0 01-4 4H6a4 4 0 01-4-4V5z"
+                            clip-rule="evenodd" />
+                        <path fill-rule="evenodd"
+                            d="M7 9a1 1 0 011-1h4a1 1 0 11 0 2H8a1 1 0 01-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    LDIF Cleaner
+                </a>
+                <a href="ldif-error-fixer.html" class="nav-item active">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" />
+                    </svg>
+                    Fix Errors
+                </a>
+                <a href="#" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Help
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="version">v1.0.0</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <header class="header">
+                <div>
+                    <h1>LDIF Error Fixer</h1>
+                    <p class="subtitle">Paste the errors your LDAP server returned and get back a corrected LDIF — no manual editing</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="efResetBtn">
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Reset
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Step 1: Upload source LDIF -->
+                <section class="card">
+                    <div class="card-header">
+                        <div class="step-badge">1</div>
+                        <div>
+                            <h2>Upload the LDIF You Submitted</h2>
+                            <p>This is the exact file that was sent to ldapadd / ldapmodify and produced errors</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-zone" id="efLdifDropZone">
+                            <input type="file" id="efLdifInput" accept=".ldif,.txt" hidden />
+                            <div class="upload-icon ldif">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <path d="M12 18v-6m-3 3h6" />
+                                </svg>
+                            </div>
+                            <div class="upload-text">
+                                <strong>Click to upload or drag and drop</strong>
+                                <span>.ldif or .txt file</span>
+                            </div>
+                        </div>
+                        <div id="efLdifFileStatus" class="file-status"></div>
+                    </div>
+                </section>
+
+                <!-- Step 2: Paste error log -->
+                <section class="card">
+                    <div class="card-header">
+                        <div class="step-badge">2</div>
+                        <div>
+                            <h2>Paste the LDAP Error Output</h2>
+                            <p>One error per line, e.g. <code>[4065] cn=9810048,cn=HyperionRegression,dc=maliyah,dc=gov -&gt; Entry already exists (use changetype: modify)</code></p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="output-container">
+                            <div class="output-preview">
+                                <textarea id="efErrorLogInput" placeholder="Paste your ldapadd / ldapmodify error output here..." rows="8"></textarea>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary" id="efAnalyzeBtn">
+                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+                                    </svg>
+                                    Analyze Errors
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 3: Fallback values for missing attributes -->
+                <section id="efFallbackSection" class="card hidden">
+                    <div class="card-header">
+                        <div class="step-badge">3</div>
+                        <div>
+                            <h2>Supply Values for Missing Attributes</h2>
+                            <p>Some entries are missing a required attribute we can't guess — give us a value to apply to every affected entry</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="efFallbackList" class="operations-list"></div>
+                    </div>
+                </section>
+
+                <!-- Step 4: Results -->
+                <section id="efResults" class="card hidden">
+                    <div class="card-header">
+                        <div class="step-badge">4</div>
+                        <div>
+                            <h2>Fix Results</h2>
+                            <p>Review what was auto-fixed and what still needs your attention</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="results-container">
+                            <div class="result-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Errors Parsed</div>
+                                    <div class="stat-value info" id="efStatTotal">0</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Auto-Fixed</div>
+                                    <div class="stat-value success" id="efStatFixed">0</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Needs Manual Review</div>
+                                    <div class="stat-value danger" id="efStatUnresolved">0</div>
+                                </div>
+                            </div>
+
+                            <div class="results-preview">
+                                <div class="preview-header">
+                                    <h3>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                                        </svg>
+                                        Errors &amp; Fixes
+                                    </h3>
+                                    <span class="preview-info" id="efResultsInfo"></span>
+                                </div>
+                                <div class="duplicates-list" id="efIssuesList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Fixed LDIF output -->
+                <section id="efOutput" class="card hidden">
+                    <div class="card-header">
+                        <div class="step-badge">5</div>
+                        <div>
+                            <h2>Fixed LDIF Output</h2>
+                            <p>Untouched entries are passed through unchanged; only entries matched to an error were modified</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="output-container">
+                            <div class="output-preview">
+                                <textarea id="efFixedLdifOutput" readonly placeholder="Fixed LDIF will appear here..."></textarea>
+                            </div>
+                            <div class="action-buttons">
+                                <button id="efDownloadFixedLdif" class="btn btn-primary">
+                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                    Download Fixed LDIF
+                                </button>
+                                <button id="efDownloadReport" class="btn btn-secondary">
+                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                                    </svg>
+                                    Download Fix Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="ldif-error-fixer.js"></script>
+    <script src="theme.js"></script>
+</body>
+
+</html>

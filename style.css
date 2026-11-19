@@ -2572,3 +2572,32 @@ html[data-theme='light'] {
 :root[data-theme='light'] .selected-tag {
   color: #1f5f1f;
 }
+
+/* ─── LDIF Error Fixer ─── */
+.duplicate-item.fixed {
+  border-left-color: var(--success);
+}
+
+.duplicate-item.unresolved {
+  border-left-color: var(--danger);
+}
+
+.ef-status-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.ef-status-badge.fixed {
+  color: var(--success);
+  background: rgba(16, 124, 16, 0.12);
+}
+
+.ef-status-badge.unresolved {
+  color: var(--danger);
+  background: rgba(209, 52, 56, 0.12);
+}

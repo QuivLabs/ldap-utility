@@ -151,6 +151,33 @@ function applyDnTemplate(template, row, mappings) {
   return dn;
 }
 
+// Split a DN template at its first unescaped comma: "cn={cn},ou=x,dc=y" -> ["cn={cn}", "ou=x,dc=y"]
+function splitFirstRdn(template) {
+  for (let i = 0; i < template.length; i++) {
+    if (template[i] === '\\') { i++; continue; }
+    if (template[i] === ',') return [template.slice(0, i), template.slice(i + 1)];
+  }
+  return [template, ''];
+}
+
+// Turn a raw CSV cell into a parent DN fragment using the parent format (e.g. "ou={value}")
+function buildParentDn(rawValue, parentFormat) {
+  const val = String(rawValue ?? '').trim().replace(/^,+|,+$/g, '').trim();
+  if (!val) return '';
+  if (val.includes('=')) return val; // already a DN fragment like "ou=HR,ou=EMEA"
+  const fmt = (parentFormat || '').trim() || '{value}';
+  return fmt.replace(/\{value\}/gi, () => val);
+}
+
+// Insert the parent into the DN template: at {parent} if present, otherwise after the entry's own RDN
+function applyParentToTemplate(template, parentDn) {
+  if (/\{parent\}/i.test(template)) {
+    return template.replace(/\{parent\}/gi, () => parentDn);
+  }
+  const [head, rest] = splitFirstRdn(template);
+  return [head.trim(), parentDn, rest.trim()].filter(Boolean).join(',');
+}
+
 function buildLdif(rows, req) {
   const lines = [];
   const warnings = [];
@@ -166,7 +193,17 @@ function buildLdif(rows, req) {
     const usedAttrs = new Set();
     const repeatableBuckets = new Map();
     const modifyOperations = [];
-    const dn = applyDnTemplate(req.dnTemplate, row, req.mappings);
+    let rowTemplate = req.dnTemplate;
+    const dyn = req.dynamicDn;
+    if (dyn && dyn.enabled) {
+      const parentDn = buildParentDn(row[dyn.column], dyn.template);
+      if (!parentDn) {
+        warnings.push(`Row ${idx + 1}: Empty parent value in column "${dyn.column}", entry skipped.`);
+        return;
+      }
+      rowTemplate = applyParentToTemplate(rowTemplate, parentDn);
+    }
+    const dn = applyDnTemplate(rowTemplate, row, req.mappings);
 
     if (!dn || /\{.+\}/.test(dn)) {
       warnings.push(`Row ${idx + 1}: DN template not fully resolved.`);
@@ -294,6 +331,12 @@ const addRepeatablePresetBtn = document.getElementById('addRepeatablePreset');
 const customRepeatableAttrEl = document.getElementById('customRepeatableAttr');
 const addCustomRepeatableBtn = document.getElementById('addCustomRepeatable');
 const repeatableAttrsListEl = document.getElementById('repeatableAttrsList');
+
+// Dynamic parent DN elements
+const useDynamicDnEl = document.getElementById('useDynamicDn');
+const dynamicDnColumnEl = document.getElementById('dynamicDnColumn');
+const dynamicDnTemplateEl = document.getElementById('dynamicDnTemplate');
+const dynamicDnPreviewEl = document.getElementById('dynamicDnPreview');
 
 // Groups mode elements
 const groupsInterface = document.getElementById('groupsInterface');
@@ -437,6 +480,50 @@ function renderMappingDetails() {
     : '<span style="color: var(--text-muted); font-size: 13px;">No inputs selected. Click CSV columns or add a literal.</span>';
 }
 
+// ===== Dynamic Parent DN =====
+function getDynamicDnConfig() {
+  return {
+    enabled: !!(useDynamicDnEl && useDynamicDnEl.checked),
+    column: dynamicDnColumnEl ? dynamicDnColumnEl.value : '',
+    template: dynamicDnTemplateEl ? dynamicDnTemplateEl.value : '{value}'
+  };
+}
+
+function populateDynamicDnColumns() {
+  if (!dynamicDnColumnEl) return;
+  const previous = dynamicDnColumnEl.value;
+  dynamicDnColumnEl.innerHTML = '';
+  csvHeaders.forEach((col) => {
+    const opt = document.createElement('option');
+    opt.value = col;
+    opt.textContent = col;
+    dynamicDnColumnEl.appendChild(opt);
+  });
+  // Keep prior choice, otherwise guess a column that looks like a parent
+  const guess = csvHeaders.find((h) => /parent|^ou$|org|dept|department|manager.?dn/i.test(h));
+  dynamicDnColumnEl.value = csvHeaders.includes(previous) ? previous : (guess || csvHeaders[0] || '');
+}
+
+function updateDynamicDnUI() {
+  const cfg = getDynamicDnConfig();
+  const show = cfg.enabled && appMode === 'create';
+  document.querySelectorAll('.dynamic-dn-field').forEach((el) => {
+    el.style.display = show ? '' : 'none';
+  });
+  if (!show || !dynamicDnPreviewEl) return;
+
+  if (!csvRows.length) {
+    dynamicDnPreviewEl.textContent = 'Upload a CSV to see a DN preview.';
+    return;
+  }
+  const parentDn = buildParentDn(csvRows[0][cfg.column], cfg.template);
+  if (!parentDn) {
+    dynamicDnPreviewEl.textContent = `Row 1 has an empty "${cfg.column}" value.`;
+    return;
+  }
+  dynamicDnPreviewEl.textContent = 'Row 1 DN: ' + applyParentToTemplate(dnTemplateEl.value.replace(/^dn:\s*/i, ''), parentDn);
+}
+
 function getDefaultAttrDnTemplate() {
   // Extract DN pattern from main DN template (remove "dn: " prefix)
   const mainDn = dnTemplateEl.value.replace(/^dn:\s*/i, '');
@@ -530,6 +617,9 @@ async function handleCsvFile(file) {
     groupsInterface.style.display = 'block';
     groupsHint.style.display = operations.length === 0 ? 'flex' : 'none';
   }
+
+  populateDynamicDnColumns();
+  updateDynamicDnUI();
 }
 
 async function handleLdifFile(file) {
@@ -664,6 +754,11 @@ if (userRecordModeEl) {
   });
 }
 
+[useDynamicDnEl, dynamicDnColumnEl, dynamicDnTemplateEl].forEach((el) => {
+  if (el) el.addEventListener(el.type === 'text' ? 'input' : 'change', updateDynamicDnUI);
+});
+dnTemplateEl.addEventListener('input', updateDynamicDnUI);
+
 concatSeparator.addEventListener('input', updateMapping);
 concatTrim.addEventListener('change', updateMapping);
 concatSkipEmpty.addEventListener('change', updateMapping);
@@ -747,8 +842,15 @@ convertBtn.addEventListener('click', () => {
       ...config
     }));
 
+    const dynamicDn = getDynamicDnConfig();
+    if (dynamicDn.enabled && !dynamicDn.column) {
+      previewEl.textContent = '⚠️ Select a parent column for the dynamic DN.';
+      return;
+    }
+
     result = buildLdif(csvRows, {
       dnTemplate: dnTemplateEl.value,
+      dynamicDn,
       mappings: mappingsArray,
       repeatableAttributes: Array.from(repeatableAttrs),
       entryMode: userRecordMode,
@@ -822,6 +924,10 @@ resetBtn.addEventListener('click', () => {
   repeatableAttrs = new Set(['objectclass', 'replace']);
   userRecordMode = 'new';
   if (userRecordModeEl) userRecordModeEl.value = 'new';
+  if (useDynamicDnEl) useDynamicDnEl.checked = false;
+  if (dynamicDnTemplateEl) dynamicDnTemplateEl.value = 'ou={value}';
+  if (dynamicDnColumnEl) dynamicDnColumnEl.innerHTML = '';
+  updateDynamicDnUI();
   renderRepeatableAttrs();
   renderOperations();
 });
@@ -842,7 +948,8 @@ function updateModeUI() {
   document.querySelectorAll('.groups-mode-only').forEach((el) => {
     el.style.display = appMode === 'groups' ? '' : 'none';
   });
-  
+  updateDynamicDnUI();
+
   // Show/hide interfaces in Step 2
   if (csvHeaders.length > 0) {
     if (appMode === 'create') {

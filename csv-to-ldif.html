@@ -56,6 +56,13 @@
           </svg>
           LDIF Cleaner
         </a>
+        <a href="ldif-error-fixer.html" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" />
+          </svg>
+          Fix Errors
+        </a>
         <a href="#" class="nav-item">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd"
@@ -223,9 +230,30 @@ mail: john.doe@example.com"></textarea>
               <div class="form-group flex-grow create-mode-only">
                 <label for="dnTemplate">DN Template</label>
                 <input type="text" id="dnTemplate" class="input" value="cn={cn},cn=users,dc=maliyah,dc=gov" />
-                <span class="hint">Use {attribute} placeholders for dynamic values</span>
+                <span class="hint">Use {attribute} placeholders for dynamic values. Add <code>{parent}</code> to control where the dynamic parent goes.</span>
               </div>
             </div>
+
+            <div class="settings-row create-mode-only" id="dynamicDnRow">
+              <div class="form-group">
+                <label class="toggle-item">
+                  <input type="checkbox" id="useDynamicDn" />
+                  <span>Dynamic parent DN from CSV</span>
+                </label>
+                <span class="hint">Each row's parent is read from a CSV column and inserted into the DN template.</span>
+              </div>
+              <div class="form-group dynamic-dn-field" style="display: none;">
+                <label for="dynamicDnColumn">Parent Column</label>
+                <select id="dynamicDnColumn" class="input"></select>
+                <span class="hint">CSV column holding the parent of each entry</span>
+              </div>
+              <div class="form-group flex-grow dynamic-dn-field" style="display: none;">
+                <label for="dynamicDnTemplate">Parent Format</label>
+                <input type="text" id="dynamicDnTemplate" class="input" value="ou={value}" placeholder="ou={value}" />
+                <span class="hint">Use {value} for the column value (e.g. <code>ou={value}</code>). Values that already contain <code>=</code> (like <code>ou=Sales,ou=HR</code>) are used as-is.</span>
+              </div>
+            </div>
+            <div class="hint dynamic-dn-field" id="dynamicDnPreview" style="display: none;"></div>
           </div>
         </section>
 

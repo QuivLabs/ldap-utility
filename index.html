@@ -201,7 +201,7 @@ h1 .dim{color:var(--text-3)}
 .problem-desc{font-size:13.5px;color:var(--text-2);line-height:1.65}
 
 /* ─── TOOLS ─── */
-.tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:56px}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:56px}
 .tool-card{
   background:var(--bg-1);border:1px solid var(--border);border-radius:14px;
   padding:32px;display:flex;flex-direction:column;
@@ -643,7 +643,7 @@ html[data-theme='light'] .quick-mode-toggle{background:var(--bg-1)}
     <p class="section-p">Each tool owns a distinct phase of the LDAP data lifecycle. Use them alone or chain them together.</p>
     <div class="tools-grid">
       <a href="csv-to-ldif.html" class="tool-card">
-        <div class="tool-num">01 / 03</div>
+        <div class="tool-num">01 / 04</div>
         <div class="tool-icon">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--accent)" stroke-width="1.6"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><path d="M14.5 11v6M11.5 14h6" stroke-width="2"/></svg>
         </div>
@@ -658,7 +658,7 @@ html[data-theme='light'] .quick-mode-toggle{background:var(--bg-1)}
         <span class="tool-arrow">Open tool <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 10h12M10 4l6 6-6 6"/></svg></span>
       </a>
       <a href="ldif-to-csv.html" class="tool-card">
-        <div class="tool-num">02 / 03</div>
+        <div class="tool-num">02 / 04</div>
         <div class="tool-icon">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--accent)" stroke-width="1.6"><path d="M3 5h14M3 9h10M3 13h6"/><path d="M13 12l4 4M17 12l-4 4"/></svg>
         </div>
@@ -673,7 +673,7 @@ html[data-theme='light'] .quick-mode-toggle{background:var(--bg-1)}
         <span class="tool-arrow">Open tool <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 10h12M10 4l6 6-6 6"/></svg></span>
       </a>
       <a href="ldif-cleaner.html" class="tool-card">
-        <div class="tool-num">03 / 03</div>
+        <div class="tool-num">03 / 04</div>
         <div class="tool-icon">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--accent)" stroke-width="1.6"><path d="M10 2l1.8 5.5H18l-4.6 3.3 1.8 5.5L10 13l-4.2 3.3 1.8-5.5L3 7.5h6.2L10 2z"/></svg>
         </div>
@@ -684,6 +684,21 @@ html[data-theme='light'] .quick-mode-toggle{background:var(--bg-1)}
           <div class="tool-feat"><span class="feat-dot"></span>Duplicate removal by DN comparison</div>
           <div class="tool-feat"><span class="feat-dot"></span>Repeatable attribute support</div>
           <div class="tool-feat"><span class="feat-dot"></span>Custom objectClass rules</div>
+        </div>
+        <span class="tool-arrow">Open tool <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 10h12M10 4l6 6-6 6"/></svg></span>
+      </a>
+      <a href="ldif-error-fixer.html" class="tool-card">
+        <div class="tool-num">04 / 04</div>
+        <div class="tool-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--accent)" stroke-width="1.6"><path d="M11.3 1.05L4.7 10.5h5.3l-1.3 8.45 6.6-9.45h-5.3l1.3-8.45z"/></svg>
+        </div>
+        <div class="tool-name">LDIF Error Fixer</div>
+        <div class="tool-desc">Paste the errors your LDAP server returned — "Entry already exists," missing attributes, and more — and get back a corrected, ready-to-resubmit LDIF.</div>
+        <div class="tool-features">
+          <div class="tool-feat"><span class="feat-dot"></span>Auto-converts add → modify on conflicts</div>
+          <div class="tool-feat"><span class="feat-dot"></span>Matches errors to entries by DN</div>
+          <div class="tool-feat"><span class="feat-dot"></span>Prompts for missing attribute values</div>
+          <div class="tool-feat"><span class="feat-dot"></span>Flags anything it can't safely fix</div>
         </div>
         <span class="tool-arrow">Open tool <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 10h12M10 4l6 6-6 6"/></svg></span>
       </a>
