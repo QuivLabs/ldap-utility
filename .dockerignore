@@ -1,0 +1,13 @@
+node_modules
+.svelte-kit
+build
+.git
+.github
+.env
+.env.*
+*.md
+!USER_GUIDE.md
+docs
+deploy
+.cursor
+agent-transcripts

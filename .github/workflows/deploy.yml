@@ -1,0 +1,93 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  DEPLOY_DIR: /opt/ldap-utility
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Image metadata
+        id: meta
+        run: |
+          OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
+          IMAGE="${{ env.REGISTRY }}/${OWNER}/ldap-utility"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "tags=${IMAGE}:main,${IMAGE}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=ldap-utility
+          cache-to: type=gha,mode=max,scope=ldap-utility
+
+  deploy:
+    needs: build-and-push
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync deploy files
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ env.DEPLOY_DIR }}"
+          cp deploy/docker-compose.yml "${{ env.DEPLOY_DIR }}/"
+          cp deploy/deploy.sh "${{ env.DEPLOY_DIR }}/"
+          chmod +x "${{ env.DEPLOY_DIR }}/deploy.sh"
+
+      - name: Write .env from GitHub secrets
+        working-directory: ${{ env.DEPLOY_DIR }}
+        env:
+          LDAP_UTILITY_IMAGE: ${{ needs.build-and-push.outputs.image }}:${{ github.sha }}
+          ORIGIN: ${{ secrets.ORIGIN }}
+        run: |
+          set -euo pipefail
+          ORIGIN="${ORIGIN:-https://trust.quivlabs.com}"
+          umask 077
+          {
+            printf '%s=%s\n' LDAP_UTILITY_IMAGE "$LDAP_UTILITY_IMAGE"
+            printf '%s=%s\n' ORIGIN "$ORIGIN"
+          } > .env
+          chmod 600 .env
+          echo "Wrote .env (secrets not printed)."
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull and restart stack
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: ./deploy.sh --skip-login

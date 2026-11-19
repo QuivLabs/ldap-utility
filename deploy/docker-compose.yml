@@ -1,0 +1,15 @@
+# Production stack for Hostinger VPS (/opt/ldap-utility).
+# Host Nginx + Certbot terminate TLS and proxy to 127.0.0.1:3012.
+#
+# Images are pulled from GHCR. Set LDAP_UTILITY_IMAGE in .env.
+
+services:
+  ldap-utility:
+    image: ${LDAP_UTILITY_IMAGE:?set LDAP_UTILITY_IMAGE}
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:3012:3000'
+    environment:
+      HOST: '0.0.0.0'
+      PORT: '3000'
+      ORIGIN: ${ORIGIN:-https://trust.quivlabs.com}

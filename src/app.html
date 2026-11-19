@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			name="description"
+			content="Prepare directory data in your browser. Convert CSV and LDIF, update attributes, remove duplicates, and review LDAP import errors."
+		/>
+		<link rel="preload" href="/assets/fonts/Geist-Variable.ttf" as="font" type="font/ttf" crossorigin />
+		<script>
+			(() => {
+				let preference = 'system';
+				let collapsed = false;
+				try {
+					preference = localStorage.getItem('ldif-appearance') || 'system';
+					collapsed = localStorage.getItem('ldif-navigation') === 'collapsed';
+				} catch {}
+				if (!['light', 'dark', 'system'].includes(preference)) preference = 'system';
+				document.documentElement.dataset.appearance = preference;
+				document.documentElement.dataset.theme =
+					preference === 'system'
+						? matchMedia('(prefers-color-scheme: dark)').matches
+							? 'dark'
+							: 'light'
+						: preference;
+				document.documentElement.classList.toggle('rail-collapsed', collapsed);
+			})();
+		</script>
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>
