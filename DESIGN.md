@@ -1,67 +1,36 @@
-# LDIF Builder design system v2
+# LDIF Builder design system v3: Soft studio
 
-The shared interface follows [Design brief v2](docs/design-brief-v2.md). The previous design is preserved in Git commit `f003be0`.
+The interface follows the Soft studio brief: a tinted frame (the space) holds a white sheet that floats inside it. The previous v2 design is preserved in Git history.
 
 ## Brand layer
 
 | Item | Decision |
 | --- | --- |
-| Product | LDIF Builder — browser tools for preparing directory data |
-| Audience and density | Directory administrators and operations teams; Default density, 32px controls, 44px touch targets |
-| Accent | Ultramarine #2f5be0; dark #7c9bff |
-| Typography | Self-hosted Geist variable; Segoe UI Variable, system sans, Noto Sans fallbacks; system monospace for code and keys |
-| Logo | Fluent Document, native 32px; navigation label supplies the product name |
-| Theme default | Follow system; Light, Dark, and System controls save only the UI preference |
-| Language and direction | English, LTR; logical spacing properties support future RTL work |
-| Locale and time | Browser locale and device time zone; file-read times are local and have exact-time tooltips |
-| Domain | Directory data preparation; no LDAP connectivity, server validation, or compliance claims |
-| Voice | Calm and exact |
+| Product | LDIF Builder, browser tools for preparing directory data |
+| Colour | One colour. Green accent (light #2f8f2f, dark #66ff00) on a neutral frame (light #eef1f5, dark #080808), taken from the earlier themed design. No space switching |
+| Font | Self-hosted Figtree variable (OFL, `assets/fonts`), with Inter, system sans and Noto Sans fallbacks. System monospace for code only |
+| Logo | Fluent Document, 16px, white on a 26px accent tile |
+| Theme default | Follow system. Light, Dark and System controls save only the UI preference |
+| Language and direction | English, LTR. Logical CSS properties are used for spacing |
+| Domain | Directory data preparation. No LDAP connectivity, server validation or compliance claims |
+| Voice | Warm, plain, specific. Sentence case, no exclamation marks |
 
-## Foundations
+## How the brief is applied
 
-`style.css` owns shared colours, typography, spacing, radii, layered shadows, control dimensions, and motion. Canvas, surface, sunken, and raised layers work together in both themes. Panels use 12px radii; controls 8px; dialogs 16px. Dark overlays use lighter surfaces and an explicit edge. Focus, control edges, and text use the brief's contrast tokens.
+- **Frame and sheet.** `body` uses `--frame`. The sidebar has no background of its own. `.main` is the 14px-radius sheet, inset 8px, with the sheet shadow. Under 900px the sidebar moves behind a menu button and the sheet goes full bleed.
+- **One colour.** `--frame`, `--frame-deep`, `--accent` and `--accent-soft` are fixed per theme. The frame is neutral, and green is used only for actions, selection, focus, progress and the page-icon tile.
+- **Bold titles and pages.** `theme.js` adds the 60px page-icon tile and a properties list (Input, Output, Processing) to each tool page, so every view reads as icon, title, one-line description, properties, then blocks. Workflow steps are stacked sections with 20px/700 titles.
+- **Tags.** `.tag-green|amber|rose|gray` are the only tag colours; blue and violet were removed. Error-fixer statuses map fixed to green and unresolved to rose, always with a word.
+- **Components.** Buttons (primary, soft default, ghost, danger), 36px inputs, rounded-square checkboxes whose tick draws in, segmented view switch for tool modes, pill progress, properties list, callouts on the space colour, key caps, command palette, toast.
+- **Icons.** Fluent UI System Icons only, Regular by default and Filled when selected, at native sizes (16 in tags and properties, 20 in the UI, 32 inside page tiles). SVGs are vendored in `assets/icons` with their MIT licence and mirrored in `icons.js`.
+- **Motion.** One easing, `cubic-bezier(.2,.8,.2,1)`. Reduced motion removes animation.
 
-`appearance.js` applies the saved appearance before paint and follows OS changes when System is selected. Storage failures fall back safely. Only appearance and navigation preferences are persisted; source files, mappings, pasted text, and outputs remain in memory.
+## Scope notes
 
-All SVGs, including dynamically rendered operation actions, are Microsoft Fluent UI System Icons, vendored with their MIT license in `assets/icons`. Selected navigation and mode tabs use Filled variants; other icons use Regular. Geist and its OFL license are in `assets/fonts`. No runtime CDN or font-service requests are needed.
-
-## Screen hierarchy
-
-| Screen | Hero and layout |
-| --- | --- |
-| Overview | Large directory-data headline paired with a clearly labelled sample conversion preview; a single tool list supports it |
-| CSV to LDIF | File-to-output workflow; source/configuration sections use side descriptions, with full-width mapping where the editor needs room |
-| LDIF to CSV | Attribute selection and generated CSV preview |
-| LDIF cleaner | Attribute-update output or comparison results, according to the selected mode |
-| Error fixer | Matched errors, fixed/unresolved counts, and the proposed LDIF |
-
-The shared shell has a 240px navigation sidebar, inset content surface, breadcrumb, command search, and appearance controls. Desktop navigation collapses to a 56px rail with accessible names and tooltips. Mobile navigation retains visible tool names.
-
-## Signature details and states
-
-- Searchable Ctrl/Cmd+K command palette, grouped actions, shortcut hints, arrow-key selection, Enter, Escape, native dialog focus containment and focus return.
-- Copy actions show a Fluent checkmark for 1.5 seconds, announce success beside the output, and keep clipboard errors inline.
-- Successfully read files show a relative read time with an exact timestamp tooltip, including files added through drag and drop.
-- Tool-row actions and icon wells respond on hover and keyboard focus. Essential labels remain visible.
-- Empty editors explain the next step and offer file selection and help. Real file-read progress is shown when the browser reports it; delayed reads also show a skeleton.
-- Shared hover, pressed, focus, selected, disabled, empty, loading, error, success, offline, and reduced-motion states. Reduced motion removes animation and movement.
-
-## Scope and brief exceptions
-
-This is a local file-preparation tool. Collaboration avatars, fabricated activity, chart deltas, publishing, and account/security controls would imply capabilities or data it does not have, so they are omitted. Inline editing remains in the actual mapping and operation fields. Output stays directly selectable and downloadable.
-
-The logo is a Fluent document mark rather than an invented brand asset; the compact sidebar does not apply a full logo-height clear space. Native selects and checkboxes retain browser semantics, with a Fluent select chevron. Existing workflow step numbers are retained because they describe the sequence. Empty-state file buttons use secondary styling so each workflow keeps one primary generation action. Input validation and directory-schema limitations remain those documented in the user guide.
+- Collaboration avatars, sharing, favourites and edited-at times are not shown. This is a local file tool and those would imply features that do not exist.
+- Toasts are used for copy confirmation. Reset actions clear in-memory state and cannot be restored, so they do not show an Undo toast. Errors stay inline.
+- Tool pages keep an 820px reading column. Wide mapping editors stack below 1024px.
 
 ## Verification
 
-Checked in headless Edge on 19 Nov 2026:
-
-- All five pages in light and dark at 320, 375, 768, 1024, and 1440px: 50 layouts without horizontal overflow.
-- Loaded CSV mapping and output in both themes at 320, 375, 768, and 1440px.
-- CSV uploads, field mappings, create/modify LDIF output; LDIF paste, attribute selection, CSV conversion and download; cleaner updates; LDAP error matching and generated modify output.
-- Clipboard success and checkmark confirmation; split-rule validation and dynamic Fluent action icons.
-- Persisted light/dark themes and 56px navigation rail; command search, empty search, Enter, Escape, and focus return.
-- OS theme changes, reduced motion, self-hosted font loading, and 44px touch controls at 320px.
-- No page exceptions or external requests in the exercised workflows.
-
-These checks exercise the design and representative conversion workflows; they do not establish a complete WCAG or performance certification.
+Checked in headless Edge on 19 Nov 2026: Overview and tool pages in light and dark, the Lilac space, the command palette, the toast, and a 390px layout. Conversion modules (`app.js`, `ldif-to-csv.js`, `ldif-cleaner.js`, `ldif-error-fixer.js`) are unchanged. This does not establish a complete WCAG or performance certification.

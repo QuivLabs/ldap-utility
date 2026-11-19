@@ -16,6 +16,30 @@
     });
     savePreference('ldif-appearance', preference);
   }
+  function toast(message, { undo } = {}) {
+    let region = document.querySelector('.toast-region');
+    if (!region) {
+      region = document.createElement('div');
+      region.className = 'toast-region';
+      region.setAttribute('role', 'status');
+      region.setAttribute('aria-live', 'polite');
+      document.body.append(region);
+    }
+    const item = document.createElement('div');
+    item.className = 'toast';
+    item.innerHTML = `${icon('CheckmarkCircle', 20, 'filled')}<span class="toast-message"></span>`;
+    item.querySelector('.toast-message').textContent = message;
+    const dismiss = () => item.remove();
+    if (undo) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = 'Undo';
+      button.addEventListener('click', () => { undo(); dismiss(); });
+      item.append(button);
+    }
+    region.replaceChildren(item);
+    setTimeout(dismiss, 5000);
+  }
   systemTheme.addEventListener('change', () => {
     if (root.dataset.appearance === 'system') setAppearance('system');
   });
@@ -163,15 +187,7 @@
     try {
       if (!navigator.clipboard) throw new Error('Clipboard unavailable');
       await navigator.clipboard.writeText(text);
-      const header = button.closest('.preview-header');
-      let confirmation = header.querySelector('.copy-confirmation');
-      if (!confirmation) {
-        confirmation = document.createElement('span');
-        confirmation.className = 'copy-confirmation';
-        confirmation.setAttribute('role', 'status');
-        header.insertBefore(confirmation, button);
-      }
-      confirmation.textContent = 'Copied to clipboard';
+      toast('Copied to clipboard');
       button.innerHTML = icon('Checkmark');
       button.title = 'Copied to clipboard';
       button.setAttribute('aria-label', 'Copied to clipboard');
@@ -181,20 +197,44 @@
         button.title = 'Copy to clipboard';
         button.setAttribute('aria-label', 'Copy to clipboard');
       }, 1500);
-      setTimeout(() => confirmation.remove(), 4000);
     } catch {
       showError(button, 'Clipboard access is unavailable. Select and copy the preview text, or download the file.');
     }
   }
 
-  window.ldifUi = { showError, askAttribute, watchFileReader, readFile, copyText };
+  window.ldifUi = { showError, askAttribute, watchFileReader, readFile, copyText, toast };
 
   // The same discoverable actions are available on every page.
   const bar = document.querySelector('.workspace-bar');
   const breadcrumb = bar?.querySelector('.breadcrumb');
+  const sidebar = document.querySelector('.sidebar');
+  const shortcut = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
   if (bar && breadcrumb) {
-    const location = document.createElement('div');
-    location.className = 'workspace-location';
+    const workspaceLocation = document.createElement('div');
+    workspaceLocation.className = 'workspace-location';
+    sidebar.id = 'workspace-sidebar';
+    const menuToggle = document.createElement('button');
+    menuToggle.type = 'button';
+    menuToggle.className = 'btn-icon menu-toggle';
+    menuToggle.innerHTML = icon('Navigation');
+    menuToggle.title = 'Open navigation';
+    menuToggle.setAttribute('aria-label', 'Open navigation');
+    menuToggle.setAttribute('aria-controls', 'workspace-sidebar');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    const scrim = document.createElement('div');
+    scrim.className = 'nav-scrim';
+    scrim.addEventListener('click', () => setNavOpen(false));
+    document.querySelector('.app').append(scrim);
+    function setNavOpen(open) {
+      root.classList.toggle('nav-open', open);
+      menuToggle.setAttribute('aria-expanded', String(open));
+      if (open) sidebar.querySelector('.nav-item.active, .nav-item')?.focus();
+      else if (sidebar.contains(document.activeElement)) menuToggle.focus();
+    }
+    menuToggle.addEventListener('click', () => setNavOpen(!root.classList.contains('nav-open')));
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && root.classList.contains('nav-open') && !document.querySelector('dialog[open]')) setNavOpen(false);
+    });
     const railToggle = document.createElement('button');
     railToggle.type = 'button';
     railToggle.className = 'btn-icon rail-toggle';
@@ -206,7 +246,6 @@
       railToggle.setAttribute('aria-expanded', String(!collapsed));
       railToggle.setAttribute('aria-controls', 'workspace-sidebar');
     }
-    document.querySelector('.sidebar').id = 'workspace-sidebar';
     document.querySelectorAll('.nav-item, .logo').forEach(link => {
       const label = link.textContent.trim();
       link.title = label;
@@ -218,19 +257,31 @@
       updateRail();
     });
     updateRail();
-    location.append(railToggle, breadcrumb);
-    bar.prepend(location);
-    const actions = document.createElement('div');
-    actions.className = 'workspace-actions';
+    workspaceLocation.append(menuToggle, railToggle, breadcrumb);
+    bar.prepend(workspaceLocation);
+
+    // The brand mark is a small tile in the accent.
+    const logoIcon = sidebar.querySelector('.logo-icon');
+    if (logoIcon) logoIcon.innerHTML = icon('Document', 16);
+
+    // Search opens the command palette from the top of the frame.
     const search = document.createElement('button');
     search.type = 'button';
     search.className = 'command-trigger';
-    const shortcut = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
-    search.innerHTML = `<span>${icon('Search')}Search tools</span><kbd>${shortcut}</kbd>`;
-    search.title = `Search tools and actions (${shortcut})`;
+    search.innerHTML = `<span>${icon('Search')}<span class="trigger-label">Search</span></span><kbd>${shortcut}</kbd>`;
+    search.title = `Search pages and actions (${shortcut})`;
+    search.setAttribute('aria-label', `Search pages and actions, ${shortcut}`);
     search.setAttribute('aria-haspopup', 'dialog');
     search.setAttribute('aria-keyshortcuts', 'Control+k Meta+k');
-    search.addEventListener('click', openCommands);
+    search.addEventListener('click', () => { setNavOpen(false); openCommands(); });
+    sidebar.querySelector('.logo')?.after(search);
+
+    const actions = document.createElement('div');
+    actions.className = 'workspace-actions';
+    const local = document.createElement('span');
+    local.className = 'tag tag-green';
+    local.innerHTML = `${icon('LockClosed', 16)}In your browser`;
+    local.title = 'File contents are processed in this browser and are not uploaded.';
     const appearance = document.createElement('div');
     appearance.className = 'appearance-control';
     appearance.setAttribute('role', 'group');
@@ -246,32 +297,56 @@
       button.addEventListener('click', () => setAppearance(value));
       appearance.append(button);
     }
-    actions.append(search, appearance);
+    actions.append(local, appearance);
     bar.append(actions);
     setAppearance(root.dataset.appearance || 'system');
+  }
+
+  // Every page opens like a document: icon tile, title, one-line description, properties.
+  const pageProps = {
+    'csv-to-ldif': { glyph: 'Document', input: 'CSV file', output: 'LDIF file' },
+    'ldif-to-csv': { glyph: 'Table', input: 'LDIF file or pasted LDIF', output: 'CSV file' },
+    'ldif-cleaner': { glyph: 'Broom', input: 'LDIF file, plus a comparison file to remove entries', output: 'Updated LDIF file' },
+    'ldif-error-fixer': { glyph: 'ShieldCheckmark', input: 'Submitted LDIF and LDAP error output', output: 'Corrected LDIF file' },
+  };
+  const slug = window.location.pathname.split('/').pop().replace(/\.html$/, '') || 'index';
+  const pageHeader = document.querySelector('.header');
+  const pageConfig = pageProps[slug];
+  if (pageHeader && (pageConfig || slug === 'index')) {
+    const tile = document.createElement('div');
+    tile.className = 'page-icon';
+    tile.innerHTML = icon(pageConfig?.glyph || 'Home', 32);
+    pageHeader.firstElementChild.prepend(tile);
+  }
+  if (pageHeader && pageConfig) {
+    const props = document.createElement('div');
+    props.className = 'page-props';
+    const row = (glyph, label, value) => `<div class="prop"><dt>${icon(glyph, 16)}${label}</dt><dd>${value}</dd></div>`;
+    props.innerHTML = `<dl class="props">${row('ArrowUpload', 'Input', pageConfig.input)}${row('ArrowDownload', 'Output', pageConfig.output)}${row('LockClosed', 'Processing', '<span class="tag tag-green">In your browser</span>')}</dl>`;
+    pageHeader.after(props);
   }
 
   function openCommands() {
     if (document.querySelector('dialog[open]')) return;
     const commands = [...document.querySelectorAll('.nav-item')].map(link => ({
       label: link.textContent.trim(),
-      description: link.getAttribute('aria-current') ? 'Current page' : (link.dataset.info ? 'Instructions and user guide' : 'Open tool'),
-      group: 'Navigate',
+      description: link.getAttribute('aria-current') ? 'Current page' : (link.dataset.info ? 'Instructions and user guide' : 'Open page'),
+      group: 'Pages',
       glyph: link.querySelector('svg')?.outerHTML || icon('Document'),
       run: () => link.click(),
     }));
     const upload = [...document.querySelectorAll('.upload-zone')].find(zone => zone.getClientRects().length);
-    if (upload) commands.push({ label: 'Choose a source file', description: 'Open the file picker', group: 'Workspace', glyph: icon('ArrowUpload', 24), run: () => upload.querySelector('input[type="file"]')?.click() });
+    if (upload) commands.push({ label: 'Choose a source file', description: 'Open the file picker', group: 'Actions', glyph: icon('ArrowUpload', 24), run: () => upload.querySelector('input[type="file"]')?.click() });
     for (const [label, value, glyph] of [['Use light theme', 'light', 'WeatherSunny'], ['Use dark theme', 'dark', 'WeatherMoon'], ['Follow system theme', 'system', 'Desktop']]) {
-      commands.push({ label, description: 'Change appearance on this device', group: 'Appearance', glyph: icon(glyph), run: () => setAppearance(value) });
+      commands.push({ label, description: 'Change appearance on this device', group: 'Actions', glyph: icon(glyph), run: () => setAppearance(value) });
     }
     const dialog = createDialog('Search tools and actions', '');
     dialog.classList.add('command-dialog');
     dialog.innerHTML = `<h2 id="dialog-title" class="sr-only">Search tools and actions</h2>
-      <div class="command-search">${icon('Search')}<label for="command-query" class="sr-only">Search tools and actions</label><input id="command-query" placeholder="Where would you like to go?" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="command-results" autofocus><button type="button" class="btn-icon" aria-label="Close search" title="Close search (Esc)">${icon('Dismiss')}</button></div>
+      <div class="command-search">${icon('Search')}<label for="command-query" class="sr-only">Search tools and actions</label><input id="command-query" placeholder="Search pages and actions" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="command-results" autofocus><button type="button" class="esc-key" aria-label="Close search" title="Close search (Esc)"><kbd>Esc</kbd></button></div>
       <div id="command-results" class="command-results" role="listbox" aria-label="Tools and actions"></div>
       <span id="command-count" class="sr-only" role="status"></span>
-      <div class="command-footer"><span><kbd>↑</kbd><kbd>↓</kbd> to navigate <kbd>Enter</kbd> to open</span><span><kbd>Esc</kbd> to close</span></div>`;
+      <div class="command-footer"><span><kbd>${icon('ArrowUp', 16)}</kbd><kbd>${icon('ArrowDown', 16)}</kbd>Move</span><span><kbd>${icon('ArrowEnterLeft')}</kbd>Open</span></div>`;
     const input = dialog.querySelector('input');
     const results = dialog.querySelector('.command-results');
     let filtered = commands, selected = 0;
@@ -307,7 +382,7 @@
       if (!filtered.length) {
         const empty = document.createElement('p');
         empty.className = 'command-empty';
-        empty.textContent = 'No matching actions. Try “CSV”, “cleaner”, or “theme”.';
+        empty.textContent = 'Nothing matches. Try “CSV”, “cleaner”, or “theme”.';
         results.append(empty);
       }
       dialog.querySelector('#command-count').textContent = `${filtered.length} actions available`;
