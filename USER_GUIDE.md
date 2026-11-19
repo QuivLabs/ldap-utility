@@ -89,7 +89,7 @@ faisal.ali,Directory Analyst
 
 1. Confirm the target suffix, OUD object classes, required attributes, entry naming attribute, existing parents, and whether the target DNs already exist. Prepare a small test CSV first.
 2. Open `csv-to-ldif.html`. Choose **Create Entries** or **Group Operations** before uploading.
-3. Upload the CSV. In Create Entries mode, the browser asks whether the rows are **old users**: **OK** selects modify; **Cancel** selects new entries. The **LDIF Mode** selector can be changed afterward.
+3. Upload the CSV. In **Create entries** mode, use the **Entry operation** selector to choose **Create new entries** or **Modify existing entries**. Uploading a file preserves the selected operation; there is no upload confirmation popup.
 4. Configure the appropriate workflow in Sections 5–9. Replace all example `dc=example,dc=com`, `cn=users`, and `cn=groups` values with the actual OUD tree.
 5. Click **Convert to LDIF**. Read the complete preview and the warning banner. Only the first five warnings are shown; a count indicates additional warnings. Resolve any skipped rows or bad records in the CSV/configuration and convert again.
 6. Click **Download LDIF** to save `output.ldif`, or use the preview's copy button if browser clipboard access works. Copy does not create a file. The downloaded file is overwritten or browser-renamed on a later download depending on browser settings.
@@ -103,7 +103,7 @@ faisal.ali,Directory Analyst
 | --- | --- | --- |
 | Mode | Create Entries | Selects entry creation/replacement mapping or group/user change cards. |
 | Delimiter | `,` before upload; guessed on upload | Displays the guessed CSV delimiter. Manual edits do not affect parsing. |
-| LDIF Mode | New Users; upload prompt can change it | Plain new entries or existing-entry `replace:` changes. |
+| Entry operation | Create new entries; preserved on upload | Plain new entries or existing-entry `replace:` changes. |
 | DN Template | `cn={cn},cn=users,dc=maliyah,dc=gov` on initial page load | Entry DN; `{targetAttribute}` tokens resolve from mapped target names. Replace this example with the real OUD DN. |
 | Dynamic parent DN | Off; parent format `ou={value}` | Builds a parent fragment from a selected CSV column and inserts it at `{parent}` or after the first RDN. |
 | Mapping parts | None | Ordered CSV columns and literal text for one target attribute. No automatic same-name mapping. |
@@ -119,10 +119,10 @@ The initial DN and operation templates are examples, not schema defaults. Config
 
 ## 5. Create new entries
 
-1. Choose **Create Entries**, upload `users.csv`, and select **New Users** in **LDIF Mode** (or click **Cancel** in the upload prompt).
+1. Choose **Create entries**, upload `users.csv`, and select **Create new entries** in **Entry operation**.
 2. Set **DN Template** to a DN only, for example `cn={cn},ou=People,dc=example,dc=com`. Do not include `dn:`. The `{cn}` token is resolved from a **mapped target attribute named `cn`**, not directly from an unmapped CSV header.
-3. Add target attributes with **+ Add Custom** or upload/paste an optional sample LDIF and click **Parse LDIF**. Click a target attribute, then click one or more CSV columns to map them. For the sample, map `cn ← cn`, `sn ← sn`, `givenName ← givenName`, and `mail ← mail`. A second click on a selected CSV column removes it from that mapping.
-4. Add `objectClass` with **+ Add Custom**. Select it, type `top person organizationalPerson inetOrgPerson` into **Literal Value**, and click **Add Literal**. `objectClass` is a repeatable target by default; the generator splits its mapped text on whitespace, commas, or semicolons and writes separate, deduplicated `objectClass:` lines. Check required object classes against OUD schema. Sample LDIF attribute inference excludes `objectClass`, so it must be added explicitly.
+3. Add target attributes with **+ Add custom** or upload/paste an optional sample LDIF and click **Read LDIF**. Click a target attribute, then click one or more CSV columns to map them. For the sample, map `cn ← cn`, `sn ← sn`, `givenName ← givenName`, and `mail ← mail`. A second click on a selected CSV column removes it from that mapping.
+4. Add `objectClass` with **+ Add custom**. Select it, type `top person organizationalPerson inetOrgPerson` into **Literal Value**, and click **Add Literal**. `objectClass` is a repeatable target by default; the generator splits its mapped text on whitespace, commas, or semicolons and writes separate, deduplicated `objectClass:` lines. Check required object classes against OUD schema. Sample LDIF attribute inference excludes `objectClass`, so it must be added explicitly.
 5. Convert and inspect every record. For the first row, the intended shape is:
 
    ```ldif
@@ -137,11 +137,11 @@ The initial DN and operation templates are examples, not schema defaults. Config
    mail: amal.salem@example.com
    ```
 
-   Custom attribute names are normalized to lowercase by the **+ Add Custom** dialog; LDAP attribute names are case-insensitive. The generated new-entry record has no `changetype: add`.
+   Custom attribute names are normalized to lowercase by the **+ Add custom** dialog; LDAP attribute names are case-insensitive. The generated new-entry record has no `changetype: add`.
 
 ### Optional target-attribute discovery and mapping controls
 
-- **Sample LDIF:** Upload `.ldif`/`.txt` or paste text and click **Parse LDIF**. The app scans lines for attribute names only; it does not infer object classes, schemas, DN patterns, values, or mappings. It excludes `dn` and `objectClass`; if the sample is a change file, control words such as `changetype` or `replace` can appear as target choices, so do not map them as user attributes. **Clear** empties the paste box but does not clear already discovered attributes.
+- **Sample LDIF:** Upload `.ldif`/`.txt` or paste text and click **Read LDIF**. The app scans lines for attribute names only; it does not infer object classes, schemas, DN patterns, values, or mappings. It excludes `dn` and `objectClass`; if the sample is a change file, control words such as `changetype` or `replace` can appear as target choices, so do not map them as user attributes. **Clear** empties the paste box but does not clear already discovered attributes.
 - **Multiple source parts:** For a selected target attribute, click several CSV columns and/or add literals. Parts are joined in selection order. The default separator is one space; **Trim result** and **Skip empty values** start enabled. Use **Separator**, or check **Use custom separator** and enter its delimiter (which takes precedence over Separator). This makes **one output value**, except for configured repeatable attributes.
 - **DN-valued attribute:** Set **Attribute Type → DN** for a selected target, such as `manager`; enter an **Attribute DN Template** such as `cn={value},ou=People,dc=example,dc=com`, and map the source column containing the manager's CN. The template substitutes the combined mapping value. The prefilled template is only a guess from the main DN template; check it.
 - **Repeatable attributes:** The default set is `objectClass` and `replace`. Add a preset or custom target name, or remove a chip. For these targets only, the generator splits the combined mapped value on **any whitespace, comma, or semicolon**, trims parts, removes duplicates, and emits one line per part. It does not preserve multiword values in repeatable attributes. `replace` is an LDIF control word, not a sensible user attribute mapping; leave it unmapped. Removing all chips still causes the generator to fall back to its default set.
@@ -149,7 +149,7 @@ The initial DN and operation templates are examples, not schema defaults. Config
 
 ## 6. Modify existing entries in Create Entries mode
 
-1. Choose **Create Entries** and upload an existing-user CSV. Click **OK** in the upload prompt, or select **Old Users (Modify Existing)** in **LDIF Mode**.
+1. Choose **Create entries**, upload an existing-user CSV, and select **Modify existing entries** in **Entry operation**.
 2. Set the exact DN template for the existing entries, for example `cn={cn},ou=People,dc=example,dc=com`. Map `cn ← cn` so the token resolves. Map only attributes intended for replacement, for example `mail ← mail` or `title ← title`. A mapped `cn` is also emitted as a `replace: cn` operation; review it for your naming policy.
 3. Convert. Each populated mapped attribute becomes its own `replace:` block. A row with `mail` mapped produces:
 

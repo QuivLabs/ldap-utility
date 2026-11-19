@@ -4,94 +4,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CSV → LDIF Converter</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <title>CSV to LDIF | LDIF Builder</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="app">
     <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="logo">
-        <div class="logo-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="#0078D4" />
-            <path d="M14 2V8H20" fill="#50E6FF" />
-            <path d="M16 13H8V15H16V13ZM16 17H8V19H16V17ZM14 9H8V11H14V9Z" fill="white" />
-          </svg>
-        </div>
-        <span>LDIF Builder</span>
-      </div>
-
-      <nav class="nav">
-        <a href="csv-to-ldif.html" class="nav-item active">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-            <path fill-rule="evenodd"
-              d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-              clip-rule="evenodd" />
-          </svg>
-          CSV → LDIF
-        </a>
-        <a href="ldif-to-csv.html" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd"
-              d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z"
-              clip-rule="evenodd" />
-          </svg>
-          LDIF → CSV
-        </a>
-        <a href="ldif-cleaner.html" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd"
-              d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-            <path fill-rule="evenodd"
-              d="M4 5a2 2 0 012-2 1 1 0 000 2H3a1 1 0 00-1 1v9a2 2 0 002 2h10a2 2 0 002-2V8a1 1 0 100-2h1a2 2 0 012 2v9a4 4 0 01-4 4H6a4 4 0 01-4-4V5z"
-              clip-rule="evenodd" />
-            <path fill-rule="evenodd"
-              d="M7 9a1 1 0 011-1h4a1 1 0 11 0 2H8a1 1 0 01-1-1z" clip-rule="evenodd" />
-          </svg>
-          LDIF Cleaner
-        </a>
-        <a href="ldif-error-fixer.html" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" />
-          </svg>
-          Fix Errors
-        </a>
-        <a href="#" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-              clip-rule="evenodd" />
-          </svg>
-          Help
-        </a>
+    <aside class="sidebar" aria-label="Workspace navigation">
+      <a class="logo" href="index.html"><span class="logo-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="12" height="15" rx="2"/><path d="M8 7h4M8 11h4M8 18v3h12V7h-4"/></svg></span><span>LDIF Builder</span></a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="index.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview</a>
+        <div class="nav-label">Directory tools</div><a href="csv-to-ldif.html" class="nav-item active" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9M14 3v6h6M14 3l6 6v3M14 17h7m-3-3 3 3-3 3"/><path d="M7 9h3M7 13h3M7 17h3"/></svg>CSV to LDIF</a>
+        <a href="ldif-to-csv.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9M14 3v6h6M14 3l6 6v3M21 17h-7m3-3-3 3 3 3"/><path d="M7 9h3M7 13h3M7 17h3"/></svg>LDIF to CSV</a>
+        <a href="ldif-cleaner.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M9 14l11-11 3 3-11 11-4 1zM17 6l3 3"/></svg>LDIF cleaner</a>
+        <a href="ldif-error-fixer.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 12 2 2 4-4M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3z"/></svg>Error fixer</a>
+        <div class="nav-label">Resources</div>
+        <a href="#help" class="nav-item" data-info="help"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5c-3-2-6-2-10-1v15c4-1 7-1 10 1 3-2 6-2 10-1V4c-4-1-7-1-10 1v15"/></svg>Help &amp; user guide</a>
       </nav>
-
-      <div class="sidebar-footer">
-        <div class="version">v1.0.0</div>
-      </div>
+      <div class="sidebar-footer"><div class="local-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><div><strong>Local file processing</strong>Your file contents stay in your browser.</div></div><span class="version">LDIF Builder v1.0.0</span></div>
     </aside>
 
     <!-- Main Content -->
-    <main class="main">
+    <main class="main" id="main-content" tabindex="-1">
+      <div class="workspace-bar"><div class="breadcrumb"><a href="index.html">Workspace</a><span aria-hidden="true">/</span><span>CSV to LDIF</span></div><span class="processing-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>Browser-based processing</span></div>
       <header class="header">
         <div>
-          <h1>CSV to LDIF Converter</h1>
-          <p class="subtitle">Transform your CSV data into LDIF format with smart field mapping</p>
+          <h1>CSV to LDIF</h1>
+          <p class="subtitle">Map CSV columns to directory attributes, then review and download your LDIF.</p>
         </div>
         <div class="header-actions">
           <button class="btn btn-secondary" id="resetBtn">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd"
-                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                clip-rule="evenodd" />
-            </svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2 8M3 4v6h6"/></svg>
             Reset
           </button>
         </div>
@@ -114,7 +59,7 @@
                     </svg>
                   </div>
                   <div class="mode-text">
-                    <strong>Create Entries</strong>
+                    <strong>Create entries</strong>
                     <span>Create new LDIF entries from CSV data</span>
                   </div>
                 </div>
@@ -131,7 +76,7 @@
                     </svg>
                   </div>
                   <div class="mode-text">
-                    <strong>Group Operations</strong>
+                    <strong>Group operations</strong>
                     <span>Add/remove members to/from groups</span>
                   </div>
                 </div>
@@ -145,7 +90,7 @@
           <div class="card-header">
             <div class="step-badge">1</div>
             <div>
-              <h2>Upload Files</h2>
+              <h2>Choose your files</h2>
               <p class="create-mode-only">Upload your CSV data and optionally a sample LDIF to infer attributes</p>
               <p class="groups-mode-only" style="display: none;">Upload CSV file with member identifiers (e.g., civil
                 IDs)</p>
@@ -165,8 +110,8 @@
                   </svg>
                 </div>
                 <div class="upload-text">
-                  <strong>CSV File</strong>
-                  <span>Drag & drop or click to browse</span>
+                  <strong>CSV file</strong>
+                  <span>Drag a file here or choose a file</span>
                 </div>
                 <div class="upload-status" id="csvStatus">No file selected</div>
               </div>
@@ -182,7 +127,7 @@
                   </svg>
                 </div>
                 <div class="upload-text">
-                  <strong>Sample LDIF (Optional)</strong>
+                  <strong>Sample LDIF (optional)</strong>
                   <span>To infer target attributes</span>
                 </div>
                 <div class="upload-status" id="ldifStatus">No file selected</div>
@@ -196,20 +141,16 @@
               </div>
               <textarea id="ldifPasteArea" class="paste-textarea" placeholder="Paste LDIF content here to extract attributes...
 
-Example:
-dn: cn=john.doe,ou=People,dc=example,dc=com
+Sample data:
+dn: cn=amal.salem,ou=People,dc=example,dc=com
 objectClass: inetOrgPerson
-cn: john.doe
-sn: Doe
-givenName: John
-mail: john.doe@example.com"></textarea>
-              <button class="btn btn-primary" id="parseLdifPasteBtn">
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z"
-                    clip-rule="evenodd" />
-                </svg>
-                Parse LDIF
+cn: amal.salem
+sn: Salem
+givenName: Amal
+mail: amal.salem@example.com"></textarea>
+              <button class="btn btn-secondary" id="parseLdifPasteBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9M14 3v6h6M14 3l6 6M8 13h8M8 17h5"/></svg>
+                Read LDIF
               </button>
             </div>
 
@@ -220,15 +161,15 @@ mail: john.doe@example.com"></textarea>
                 <span class="hint">Auto-detected from CSV</span>
               </div>
               <div class="form-group create-mode-only">
-                <label for="userRecordMode">LDIF Mode</label>
+                <label for="userRecordMode">Entry operation</label>
                 <select id="userRecordMode" class="input">
-                  <option value="new">New Users (Create Entries)</option>
-                  <option value="modify">Old Users (Modify Existing)</option>
+                  <option value="new">Create new entries</option>
+                  <option value="modify">Modify existing entries</option>
                 </select>
-                <span class="hint">You will be asked after CSV upload. You can change it here anytime.</span>
+                <span class="hint">Choose whether to create entries or modify existing entries.</span>
               </div>
               <div class="form-group flex-grow create-mode-only">
-                <label for="dnTemplate">DN Template</label>
+                <label for="dnTemplate">DN template</label>
                 <input type="text" id="dnTemplate" class="input" value="cn={cn},cn=users,dc=maliyah,dc=gov" />
                 <span class="hint">Use {attribute} placeholders for dynamic values. Add <code>{parent}</code> to control where the dynamic parent goes.</span>
               </div>
@@ -243,12 +184,12 @@ mail: john.doe@example.com"></textarea>
                 <span class="hint">Each row's parent is read from a CSV column and inserted into the DN template.</span>
               </div>
               <div class="form-group dynamic-dn-field" style="display: none;">
-                <label for="dynamicDnColumn">Parent Column</label>
+                <label for="dynamicDnColumn">Parent column</label>
                 <select id="dynamicDnColumn" class="input"></select>
                 <span class="hint">CSV column holding the parent of each entry</span>
               </div>
               <div class="form-group flex-grow dynamic-dn-field" style="display: none;">
-                <label for="dynamicDnTemplate">Parent Format</label>
+                <label for="dynamicDnTemplate">Parent format</label>
                 <input type="text" id="dynamicDnTemplate" class="input" value="ou={value}" placeholder="ou={value}" />
                 <span class="hint">Use {value} for the column value (e.g. <code>ou={value}</code>). Values that already contain <code>=</code> (like <code>ou=Sales,ou=HR</code>) are used as-is.</span>
               </div>
@@ -262,10 +203,10 @@ mail: john.doe@example.com"></textarea>
           <div class="card-header">
             <div class="step-badge">2</div>
             <div>
-              <h2 class="create-mode-only">Field Mapping</h2>
+              <h2 class="create-mode-only">Map your fields</h2>
               <p class="create-mode-only">Map CSV columns to LDIF attributes - select multiple columns to concatenate
               </p>
-              <h2 class="groups-mode-only" style="display: none;">Configure Operations</h2>
+              <h2 class="groups-mode-only" style="display: none;">Configure operations</h2>
               <p class="groups-mode-only" style="display: none;">Define group operations to add/remove members. Use static groups or map group names from CSV for multi-group support.</p>
             </div>
             <button class="btn btn-outline btn-sm groups-mode-only" id="addOperationBtn" style="display: none;">+ Add
@@ -286,8 +227,8 @@ mail: john.doe@example.com"></textarea>
               <div class="mapping-columns">
                 <div class="mapping-column">
                   <div class="column-header">
-                    <h3>LDIF Attributes (Target)</h3>
-                    <button class="btn btn-outline btn-sm" id="addLdifAttr">+ Add Custom</button>
+                    <h3>LDIF attributes (target)</h3>
+                    <button class="btn btn-outline btn-sm" id="addLdifAttr">+ Add custom</button>
                   </div>
                   <div id="ldifAttributesList" class="attribute-list"></div>
                 </div>
@@ -301,7 +242,7 @@ mail: john.doe@example.com"></textarea>
 
                 <div class="mapping-column">
                   <div class="column-header">
-                    <h3>CSV Columns (Source)</h3>
+                    <h3>CSV columns (source)</h3>
                     <span class="hint" id="csvColumnCount">0 columns</span>
                   </div>
                   <div id="csvColumnsList" class="attribute-list"></div>
@@ -310,27 +251,27 @@ mail: john.doe@example.com"></textarea>
 
               <div class="mapping-details" id="mappingDetails" style="display: none;">
                 <div class="details-header">
-                  <h3>Mapping Configuration: <span id="currentAttrName"></span></h3>
-                  <button class="btn btn-secondary btn-sm" id="clearMapping">Clear Mapping</button>
+                  <h3>Mapping configuration: <span id="currentAttrName"></span></h3>
+                  <button class="btn btn-secondary btn-sm" id="clearMapping">Clear mapping</button>
                 </div>
                 <div class="details-body">
                   <div class="selected-fields">
-                    <label>Selected CSV Columns:</label>
+                    <label>Selected CSV columns:</label>
                     <div id="selectedFieldsList" class="selected-list"></div>
                   </div>
                   <div class="literal-row">
-                    <label for="literalValue">Add Literal Value</label>
+                    <label for="literalValue">Add literal Value</label>
                     <div class="literal-controls">
                       <input type="text" id="literalValue" class="input"
                         placeholder="e.g., @example.com or OU=People" />
-                      <button class="btn btn-outline btn-sm" id="addLiteral">Add Literal</button>
+                      <button class="btn btn-outline btn-sm" id="addLiteral">Add literal</button>
                     </div>
                     <span class="hint">Use literals to add prefixes/suffixes or static text alongside CSV
                       columns.</span>
                   </div>
                   <div class="type-options">
                     <div class="form-group">
-                      <label for="attrType">Attribute Type</label>
+                      <label for="attrType">Attribute type</label>
                       <select id="attrType" class="input">
                         <option value="text">Text (plain value)</option>
                         <option value="dn">DN (Distinguished Name)</option>
@@ -338,7 +279,7 @@ mail: john.doe@example.com"></textarea>
                       <span class="hint">Use DN type for attributes like manager that reference other entries.</span>
                     </div>
                     <div class="form-group dn-template-group" id="dnTemplateGroup" style="display: none;">
-                      <label for="attrDnTemplate">DN Template for this Attribute</label>
+                      <label for="attrDnTemplate">DN template for this Attribute</label>
                       <input type="text" id="attrDnTemplate" class="input"
                         placeholder="cn={value},cn=users,dc=maliyah,dc=gov" />
                       <span class="hint">Use {value} as placeholder for the mapped value (e.g., manager's civil
@@ -347,20 +288,20 @@ mail: john.doe@example.com"></textarea>
                   </div>
                   <div class="concat-options">
                     <div class="form-group">
-                      <label>Concatenation Separator</label>
+                      <label>Concatenation separator</label>
                       <input type="text" id="concatSeparator" class="input" value=" " placeholder="Space" />
                       <span class="hint">Character(s) to join multiple fields (e.g., space, comma, dash)</span>
                     </div>
                     <div class="form-group">
                       <label class="toggle-item">
                         <input type="checkbox" id="useCustomSeparator" />
-                        <span>Use Custom Separator for Column Combining</span>
+                        <span>Use a custom separator to combine columns</span>
                       </label>
                       <span class="hint">Enable this to combine multiple CSV columns with a delimiter that can be split
                         later in LDIF → CSV</span>
                     </div>
                     <div class="form-group" id="customSeparatorGroup" style="display: none;">
-                      <label>Custom Separator (for splitting later)</label>
+                      <label>Custom separator (for splitting later)</label>
                       <input type="text" id="customSeparator" class="input" value="," placeholder="," />
                       <span class="hint">Use a unique delimiter (e.g., comma, pipe |, or semicolon ;) to combine columns
                         so they can be easily split in the LDIF → CSV tool</span>
@@ -377,20 +318,20 @@ mail: john.doe@example.com"></textarea>
                     </div>
                   </div>
                   <div class="literal-row">
-                    <label>Repeatable Attributes</label>
+                    <label>Repeatable attributes</label>
                     <div class="literal-controls">
                       <select id="repeatablePreset" class="input">
                         <option value="objectClass">objectClass</option>
                         <option value="replace">replace</option>
                       </select>
-                      <button class="btn btn-outline btn-sm" id="addRepeatablePreset" type="button">Add Preset</button>
+                      <button class="btn btn-outline btn-sm" id="addRepeatablePreset" type="button">Add preset</button>
                     </div>
-                    <div class="literal-controls" style="margin-top: 8px;">
+                    <div class="literal-controls space-before">
                       <input type="text" id="customRepeatableAttr" class="input" placeholder="Custom attribute (e.g., changetype)" />
-                      <button class="btn btn-outline btn-sm" id="addCustomRepeatable" type="button">Add Custom</button>
+                      <button class="btn btn-outline btn-sm" id="addCustomRepeatable" type="button">Add custom</button>
                     </div>
                     <span class="hint">Default repeatable attributes are objectClass and replace.</span>
-                    <div id="repeatableAttrsList" class="selected-list" style="margin-top: 8px;"></div>
+                    <div id="repeatableAttrsList" class="selected-list space-before"></div>
                   </div>
                 </div>
               </div>
@@ -419,24 +360,16 @@ mail: john.doe@example.com"></textarea>
           <div class="card-header">
             <div class="step-badge">3</div>
             <div>
-              <h2>Preview & Download</h2>
+              <h2>Preview and download</h2>
               <p>Review the generated LDIF output before downloading</p>
             </div>
             <div class="header-actions">
               <button class="btn btn-primary" id="convertBtn">
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z"
-                    clip-rule="evenodd" />
-                </svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9M14 3v6h6M14 3l6 6m-11 7 2 2 4-4"/></svg>
                 Convert to LDIF
               </button>
               <button class="btn btn-success" id="downloadBtn" disabled>
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd"
-                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                    clip-rule="evenodd" />
-                </svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></svg>
                 Download LDIF
               </button>
             </div>
@@ -447,11 +380,7 @@ mail: john.doe@example.com"></textarea>
               <div class="preview-header">
                 <span>output.ldif</span>
                 <button class="btn-icon" id="copyBtn" title="Copy to clipboard">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-                    <path
-                      d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
-                  </svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></svg>
                 </button>
               </div>
               <pre id="preview" class="preview-code">Upload a CSV and configure mappings to see preview...</pre>
@@ -460,6 +389,7 @@ mail: john.doe@example.com"></textarea>
         </section>
 
       </div>
+    <footer class="page-footer"><span>LDIF Builder <span aria-hidden="true">/</span> Directory data tools</span><div class="footer-links"><a href="USER_GUIDE.md" download>User guide</a><button type="button" data-info="privacy">Privacy</button><button type="button" data-info="security">Security</button></div></footer>
     </main>
   </div>
 

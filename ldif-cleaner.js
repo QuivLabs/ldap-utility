@@ -162,7 +162,7 @@ class LdifDataCleaner {
         const fieldLower = this.normalizeAttrName(operation.field);
         const operationValue = (operation.value || '').toString().trim();
         const isRepeatable = this.isRepeatableAttribute(fieldLower);
-        
+
         // Handle DN
         if (fieldLower === 'dn') {
           if (operation.action === 'replace') {
@@ -198,7 +198,7 @@ class LdifDataCleaner {
             }
           }
         }
-        
+
         return entry;
       });
     });
@@ -211,10 +211,10 @@ class LdifDataCleaner {
    */
   entriesToLdif(entries) {
     const lines = [];
-    
+
     entries.forEach((entry, idx) => {
       if (idx > 0) lines.push('');
-      
+
       // DN must come first
       if (entry.dn && entry.dn[0]) {
         lines.push(`dn: ${entry.dn[0]}`);
@@ -222,7 +222,7 @@ class LdifDataCleaner {
 
       // Process attributes alphabetically (except dn)
       const attributes = Object.keys(entry).filter(key => key !== 'dn').sort();
-      
+
       attributes.forEach(attr => {
         const values = Array.isArray(entry[attr]) ? entry[attr] : [entry[attr]];
         values.forEach(value => {
@@ -264,11 +264,11 @@ cleanModeRadios.forEach(radio => {
   radio.addEventListener('change', (e) => {
     currentMode = e.target.value;
     const isFix = currentMode === 'fix';
-    
+
     fixModeSection.classList.toggle('hidden', !isFix);
     fixOperationsSection.classList.toggle('hidden', !isFix);
     fixOutputSection.classList.toggle('hidden', !isFix);
-    
+
     dedupModeSection.classList.toggle('hidden', isFix);
     dedupResultsSection.classList.toggle('hidden', isFix);
   });
@@ -305,14 +305,15 @@ function handleFixFileUpload() {
   if (!file) return;
 
   const reader = new FileReader();
+  window.ldifUi.watchFileReader(reader, fixFileStatus, fixDropZone);
   reader.onload = (e) => {
     cleaner.fixLdifContent = e.target.result;
     cleaner.fixedEntries = cleaner.parseLdif(cleaner.fixLdifContent);
-    
+
     const count = cleaner.fixedEntries.length;
     fixFileStatus.innerHTML = `<div class="file-info success">✓ Loaded ${count} entries</div>`;
     fixOperationsSection.classList.remove('hidden');
-    
+
     // Initialize first fix operation
     if (cleaner.fixOperations.length === 0) {
       cleaner.fixOperations.push({ field: 'dn', action: 'replace', value: '' });
@@ -332,10 +333,8 @@ function renderFixOperations() {
     opDiv.innerHTML = `
       <div class="operation-header">
         <h4>Fix #${idx + 1}</h4>
-        ${idx > 0 ? `<button class="btn-icon danger" onclick="removeFixOperation(${idx})">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
+        ${idx > 0 ? `<button class="btn-icon danger" onclick="removeFixOperation(${idx})" aria-label="Remove update operation ${idx + 1}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>
         </button>` : ''}
       </div>
       <div class="operation-body">
@@ -532,13 +531,14 @@ function handleExtractFileUpload() {
   if (!file) return;
 
   const reader = new FileReader();
+  window.ldifUi.watchFileReader(reader, extractFileStatus, extractDropZone);
   reader.onload = (e) => {
     cleaner.extractLdifContent = e.target.result;
     cleaner.extractedEntries = cleaner.parseLdif(cleaner.extractLdifContent);
-    
+
     const count = cleaner.extractedEntries.length;
     extractFileStatus.innerHTML = `<div class="file-info success">✓ Loaded ${count} entries</div>`;
-    
+
     processDedup();
   };
   reader.readAsText(file);
@@ -573,13 +573,14 @@ function handleMasterFileUpload() {
   if (!file) return;
 
   const reader = new FileReader();
+  window.ldifUi.watchFileReader(reader, masterFileStatus, masterDropZone);
   reader.onload = (e) => {
     cleaner.masterLdifContent = e.target.result;
     cleaner.masterEntries = cleaner.parseLdif(cleaner.masterLdifContent);
-    
+
     const count = cleaner.masterEntries.length;
     masterFileStatus.innerHTML = `<div class="file-info success">✓ Loaded ${count} entries</div>`;
-    
+
     processDedup();
   };
   reader.readAsText(file);
@@ -589,7 +590,7 @@ function processDedup() {
   if (!cleaner.extractLdifContent || !cleaner.masterLdifContent) return;
 
   const results = cleaner.findDuplicates();
-  
+
   // Update stats
   document.getElementById('totalExtractEntries').textContent = cleaner.extractedEntries.length;
   document.getElementById('totalMasterEntries').textContent = results.totalEntries;
@@ -605,12 +606,12 @@ function processDedup() {
   duplicatesList.innerHTML = '';
 
   if (cleaner.duplicates.length === 0) {
-    duplicatesList.innerHTML = '<div class="empty-state">✓ No duplicates found! All entries in your Master Sheet are unique and safe to import.</div>';
+    duplicatesList.innerHTML = '<div class="empty-state"><p>No matching entries found</p><span>No entries match the comparison file. Review the output before importing.</span></div>';
   } else {
     cleaner.duplicates.forEach((dup, idx) => {
       const dupDiv = document.createElement('div');
       dupDiv.className = 'duplicate-item';
-      
+
       // Get important attributes
       const attributes = getImportantAttributes(dup.original);
       const attributesHtml = attributes.length > 0 
@@ -644,7 +645,7 @@ function processDedup() {
 function getImportantAttributes(entry) {
   const importantKeys = ['objectclass', 'cn', 'mail', 'uid', 'ou', 'memberof'];
   const attributes = [];
-  
+
   // Get objectclass first
   if (entry.objectclass) {
     const values = Array.isArray(entry.objectclass) ? entry.objectclass : [entry.objectclass];
@@ -653,7 +654,7 @@ function getImportantAttributes(entry) {
       value: values.join(', ')
     });
   }
-  
+
   // Get other important attributes
   importantKeys.forEach(key => {
     if (key !== 'objectclass' && entry[key]) {
@@ -665,7 +666,7 @@ function getImportantAttributes(entry) {
       });
     }
   });
-  
+
   return attributes.slice(0, 3); // Show max 3 attributes
 }
 
@@ -698,30 +699,30 @@ document.getElementById('downloadCleanedLdif').addEventListener('click', () => {
 document.getElementById('downloadDuplicatesReport').addEventListener('click', () => {
   let report = 'DUPLICATE ENTRIES REPORT\n';
   report += '========================\n\n';
-  
+
   report += 'CALCULATION METHOD:\n';
   report += '-------------------\n';
   report += 'Duplicates are identified by comparing the Distinguished Name (DN) of each entry\n';
   report += 'in Your Master Sheet with entries in the Extract Sheet (from LDAP Explorer).\n';
   report += 'When a DN from Master Sheet matches a DN in Extract Sheet, the entry is marked\n';
   report += 'as a duplicate and will be removed to avoid re-creating existing objects.\n\n';
-  
+
   report += 'STATISTICS:\n';
   report += '-----------\n';
   report += `Extract Sheet Entries:        ${cleaner.extractedEntries.length}\n`;
   report += `Your Master Sheet Entries:    ${cleaner.masterEntries.length}\n`;
   report += `Duplicates Found:             ${cleaner.duplicates.length}\n`;
   report += `Unique Entries After Removal: ${cleaner.cleanedEntries.length}\n\n`;
-  
+
   report += 'DUPLICATE ENTRIES (TO BE REMOVED):\n';
   report += '----------------------------------\n\n';
-  
+
   if (cleaner.duplicates.length === 0) {
     report += 'No duplicates found!\n';
   } else {
     cleaner.duplicates.forEach((dup, idx) => {
       report += `${idx + 1}. ${dup.dn}\n`;
-      
+
       // Add attributes
       const attributes = getImportantAttributes(dup.original);
       if (attributes.length > 0) {

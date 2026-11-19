@@ -126,12 +126,12 @@ function buildAttributeValue(row, mapping) {
     })
     .filter((v) => (m.skipEmptyParts ? String(v).trim() !== '' : true));
   if (!parts.length) return undefined;
-  
+
   // Use custom separator if enabled (for column combining)
   const sep = m.useCustomSeparator ? (m.customSeparator ?? ',') : (m.separator ?? ' ');
   const raw = parts.join(sep);
   const val = m.trim ? raw.trim() : raw;
-  
+
   // If attribute type is DN, wrap value in DN template
   if (m.attrType === 'dn' && m.dnTemplate) {
     return m.dnTemplate.replace(/\{value\}/gi, val);
@@ -407,27 +407,31 @@ function removeRepeatableAttr(attr) {
 function renderLdifAttributes() {
   const allAttrs = [...new Set([...commonLdifAttrs, ...ldifAttrs])];
   ldifAttributesList.innerHTML = '';
-  
+
+  if (!allAttrs.length) {
+    ldifAttributesList.innerHTML = '<div class="empty-state-sm"><p>Add a target attribute</p><span>Choose Add custom, or read a sample LDIF to list its attributes.</span></div>';
+  }
+
   allAttrs.forEach(attr => {
     const isMapped = mappings.has(attr);
     const isSelected = selectedAttribute === attr;
     const count = isMapped ? normalizeMapping(mappings.get(attr)).sourceParts.length : 0;
-    
+
     const div = document.createElement('div');
     div.className = `attribute-item ${isSelected ? 'selected' : ''} ${isMapped ? 'mapped' : ''}`;
     div.dataset.attr = attr;
-    
+
     const span = document.createElement('span');
     span.textContent = attr;
     div.appendChild(span);
-    
+
     if (count > 0) {
       const badge = document.createElement('span');
       badge.className = 'badge';
       badge.textContent = count;
       div.appendChild(badge);
     }
-    
+
     ldifAttributesList.appendChild(div);
   });
 }
@@ -435,7 +439,7 @@ function renderLdifAttributes() {
 function renderCsvColumns() {
   csvColumnCount.textContent = `${csvHeaders.length} columns`;
   csvColumnsList.innerHTML = '';
-  
+
   csvHeaders.forEach(col => {
     const isSelected = selectedAttribute && normalizeMapping(mappings.get(selectedAttribute))?.sourceParts.some((p) => p.type === 'csv' && p.value === col);
     const div = document.createElement('div');
@@ -464,7 +468,7 @@ function renderMappingDetails() {
   useCustomSeparator.checked = mapping.useCustomSeparator;
   customSeparator.value = mapping.customSeparator;
   customSeparatorGroup.style.display = mapping.useCustomSeparator ? 'flex' : 'none';
-  
+
   // Set attribute type and DN template
   attrTypeSelect.value = mapping.attrType;
   attrDnTemplateInput.value = mapping.dnTemplate || getDefaultAttrDnTemplate();
@@ -576,7 +580,8 @@ function setupDropZone(zone, input, onFile) {
 }
 
 async function handleCsvFile(file) {
-  const text = await file.text();
+  const text = await window.ldifUi.readFile(file, csvStatus, csvDropZone);
+  if (text === null) return;
   const firstLine = text.split(/\r?\n/)[0] || '';
   const guess = detectDelimiter(firstLine);
   delimiterEl.value = guess;
@@ -591,21 +596,18 @@ async function handleCsvFile(file) {
   console.log('CSV Headers:', csvHeaders);
   console.log('CSV Headers length:', csvHeaders.length);
 
-  csvStatus.textContent = `${file.name} • ${csvRows.length} rows, ${csvHeaders.length} columns`;
+  csvStatus.textContent = `${file.name}; ${csvRows.length} rows, ${csvHeaders.length} columns`;
   csvDropZone.classList.add('has-file');
 
   if (appMode === 'create') {
-    const isModify = window.confirm(
-      'Is this for OLD users you want to modify?\n\nClick OK for old users (modify mode).\nClick Cancel for new users (create mode).'
-    );
-    userRecordMode = isModify ? 'modify' : 'new';
+    userRecordMode = userRecordModeEl?.value || 'new';
     if (userRecordModeEl) {
       userRecordModeEl.value = userRecordMode;
     }
   }
 
   mappingHint.style.display = 'none';
-  
+
   // Show appropriate interface based on mode
   if (appMode === 'create') {
     mappingInterface.style.display = 'block';
@@ -623,17 +625,18 @@ async function handleCsvFile(file) {
 }
 
 async function handleLdifFile(file) {
-  const text = await file.text();
+  const text = await window.ldifUi.readFile(file, ldifStatus, ldifDropZone);
+  if (text === null) return;
   processLdifText(text, file.name);
 }
 
 function processLdifText(text, sourceName) {
   ldifAttrs = extractLdifAttributes(text);
   ldifStatus.textContent = ldifAttrs.length
-    ? `${sourceName} • ${ldifAttrs.length} attributes found`
-    : `${sourceName} • No attributes detected`;
+    ? `${sourceName}; ${ldifAttrs.length} attributes found`
+    : `${sourceName}; No attributes detected`;
   ldifDropZone.classList.add('has-file');
-  
+
   if (csvHeaders.length) {
     renderLdifAttributes();
   }
@@ -641,12 +644,12 @@ function processLdifText(text, sourceName) {
 
 function handleLdifPaste() {
   const text = ldifPasteArea.value.trim();
-  
+
   if (!text) {
-    alert('Please paste LDIF content first.');
+    window.ldifUi.showError('ldifPasteArea', 'Paste LDIF content before reading its attributes.');
     return;
   }
-  
+
   processLdifText(text, 'Pasted Content');
 }
 
@@ -665,7 +668,7 @@ clearLdifPasteBtn.addEventListener('click', clearLdifPaste);
 ldifAttributesList.addEventListener('click', (e) => {
   const item = e.target.closest('.attribute-item');
   if (!item) return;
-  
+
   selectedAttribute = item.dataset.attr;
   renderLdifAttributes();
   renderCsvColumns();
@@ -675,23 +678,23 @@ ldifAttributesList.addEventListener('click', (e) => {
 csvColumnsList.addEventListener('click', (e) => {
   const item = e.target.closest('.attribute-item');
   if (!item || !selectedAttribute) return;
-  
+
   const col = item.dataset.col;
   const mapping = normalizeMapping(mappings.get(selectedAttribute));
-  
+
   const idx = mapping.sourceParts.findIndex((p) => p.type === 'csv' && p.value === col);
   if (idx > -1) {
     mapping.sourceParts.splice(idx, 1);
   } else {
     mapping.sourceParts.push({ type: 'csv', value: col });
   }
-  
+
   if (mapping.sourceParts.length > 0) {
     mappings.set(selectedAttribute, mapping);
   } else {
     mappings.delete(selectedAttribute);
   }
-  
+
   renderLdifAttributes();
   renderCsvColumns();
   renderMappingDetails();
@@ -700,18 +703,18 @@ csvColumnsList.addEventListener('click', (e) => {
 selectedFieldsList.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-remove]');
   if (!btn || !selectedAttribute) return;
-  
+
   const field = btn.dataset.remove;
   const type = btn.dataset.removeType;
   const mapping = normalizeMapping(mappings.get(selectedAttribute));
   if (!mapping) return;
-  
+
   mapping.sourceParts = mapping.sourceParts.filter((p) => !(p.value === field && p.type === type));
-  
+
   if (mapping.sourceParts.length === 0) {
     mappings.delete(selectedAttribute);
   }
-  
+
   renderLdifAttributes();
   renderCsvColumns();
   renderMappingDetails();
@@ -787,16 +790,16 @@ clearMappingBtn.addEventListener('click', () => {
   renderMappingDetails();
 });
 
-addLdifAttrBtn.addEventListener('click', () => {
-  const attr = prompt('Enter custom LDIF attribute name:');
+addLdifAttrBtn.addEventListener('click', async () => {
+  const attr = await window.ldifUi.askAttribute();
   if (!attr || !attr.trim()) return;
-  
+
   const cleaned = attr.trim().toLowerCase().replace(/\s+/g, '');
   if (!/^[a-z0-9_-]+$/i.test(cleaned)) {
-    alert('Invalid attribute name. Use only letters, numbers, hyphens, and underscores.');
+    window.ldifUi.showError('ldifAttributesList', 'Use only letters, numbers, hyphens, and underscores for attribute names.');
     return;
   }
-  
+
   ldifAttrs.push(cleaned);
   selectedAttribute = cleaned;
   renderLdifAttributes();
@@ -821,7 +824,7 @@ addLiteralBtn.addEventListener('click', () => {
 
 convertBtn.addEventListener('click', () => {
   if (!csvRows.length) {
-    previewEl.textContent = '⚠️ Please upload a CSV file first.';
+    window.ldifUi.showError('csvDropZone', 'Choose a CSV file before converting to LDIF.');
     return;
   }
 
@@ -830,7 +833,7 @@ convertBtn.addEventListener('click', () => {
   if (appMode === 'groups') {
     // Groups mode: build group operations LDIF
     if (operations.length === 0) {
-      previewEl.textContent = '⚠️ Please add at least one operation.';
+      previewEl.textContent = 'Please add at least one operation.';
       return;
     }
 
@@ -844,7 +847,7 @@ convertBtn.addEventListener('click', () => {
 
     const dynamicDn = getDynamicDnConfig();
     if (dynamicDn.enabled && !dynamicDn.column) {
-      previewEl.textContent = '⚠️ Select a parent column for the dynamic DN.';
+      previewEl.textContent = 'Select a parent column for the dynamic DN.';
       return;
     }
 
@@ -858,12 +861,12 @@ convertBtn.addEventListener('click', () => {
   }
 
   lastResult = result;
-  previewEl.textContent = result.ldif || '⚠️ No output generated. Check your configuration.';
+  previewEl.textContent = result.ldif || 'No output generated. Check your configuration.';
   downloadBtn.disabled = !result.ldif;
 
   if (result.warnings.length) {
     warningsEl.hidden = false;
-    warningsEl.textContent = '⚠️ ' + result.warnings.slice(0, 5).join(' | ');
+    warningsEl.textContent = result.warnings.slice(0, 5).join(' | ');
     if (result.warnings.length > 5) {
       warningsEl.textContent += ` (+${result.warnings.length - 5} more)`;
     }
@@ -884,13 +887,7 @@ downloadBtn.addEventListener('click', () => {
 });
 
 copyBtn.addEventListener('click', () => {
-  if (lastResult?.ldif) {
-    navigator.clipboard.writeText(lastResult.ldif);
-    copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>`;
-    setTimeout(() => {
-      copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>`;
-    }, 2000);
-  }
+  if (lastResult?.ldif) window.ldifUi.copyText(lastResult.ldif, copyBtn);
 });
 
 resetBtn.addEventListener('click', () => {
@@ -917,7 +914,7 @@ resetBtn.addEventListener('click', () => {
   mappingHint.style.display = 'block';
   mappingInterface.style.display = 'none';
   mappingDetails.style.display = 'none';
-  
+
   // Reset groups mode state
   operations = [];
   operationIdCounter = 0;
@@ -1018,24 +1015,24 @@ function buildGroupOperationsLdif(rows, operations) {
     if (op.useGroupColumn) {
       // Dynamic groups from CSV column
       const groupMap = new Map(); // Map of groupDn => members
-      
+
       rows.forEach((row, idx) => {
         const memberValue = row[op.csvColumn] ?? '';
         if (!memberValue || !memberValue.trim()) {
           warnings.push(`Row ${idx + 1}: Empty value for member column "${op.csvColumn}"`);
           return;
         }
-        
+
         const groupValue = row[op.groupColumn] ?? '';
         if (!groupValue || !groupValue.trim()) {
           warnings.push(`Row ${idx + 1}: Empty value for group column "${op.groupColumn}"`);
           return;
         }
-        
+
         // Split groups by delimiter
         const groups = groupValue.split(op.groupDelimiter || ';').map(g => g.trim()).filter(g => g);
         const memberDn = op.memberDnTemplate.replace(/\{value\}/gi, memberValue.trim());
-        
+
         groups.forEach((group) => {
           // Apply group DN template if specified
           const groupDn = op.groupDnTemplate ? op.groupDnTemplate.replace(/\{value\}/gi, group) : group;
@@ -1064,14 +1061,14 @@ function buildGroupOperationsLdif(rows, operations) {
     } else {
       // Static group - original behavior
       const members = [];
-      
+
       rows.forEach((row, idx) => {
         const value = row[op.csvColumn] ?? '';
         if (!value || !value.trim()) {
           warnings.push(`Row ${idx + 1}: Empty value for column "${op.csvColumn}"`);
           return;
         }
-        
+
         const memberDn = op.memberDnTemplate.replace(/\{value\}/gi, value.trim());
         members.push(memberDn);
       });
@@ -1112,10 +1109,10 @@ function renderOperations() {
       </div>
       <div class="operation-body">
         <div class="form-group">
-          <label>Operation Target</label>
+          <label>Operation target</label>
           <select class="input" onchange="updateOperation(${op.id}, 'targetType', this.value)">
-            <option value="group" ${targetType === 'group' ? 'selected' : ''}>Group Membership</option>
-            <option value="user" ${targetType === 'user' ? 'selected' : ''}>Single User Attribute</option>
+            <option value="group" ${targetType === 'group' ? 'selected' : ''}>Group membership</option>
+            <option value="user" ${targetType === 'user' ? 'selected' : ''}>Single user attribute</option>
           </select>
           <span class="hint">Choose whether this operation updates group members or modifies each user entry directly.</span>
         </div>
@@ -1124,7 +1121,7 @@ function renderOperations() {
         <div class="form-group toggle-item">
           <label>
             <input type="checkbox" ${op.useGroupColumn ? 'checked' : ''} onchange="updateOperation(${op.id}, 'useGroupColumn', this.checked)" />
-            <span>Use Group Names from CSV?</span>
+            <span>Use Group names from CSV?</span>
           </label>
           <span class="hint">Enable to map group names from a CSV column (supports multiple groups per row)</span>
         </div>
@@ -1139,7 +1136,7 @@ function renderOperations() {
 
         ${op.useGroupColumn ? `
           <div class="form-group">
-            <label>Group Column</label>
+            <label>Group column</label>
             <select class="input" onchange="updateOperation(${op.id}, 'groupColumn', this.value)">
               <option value="">-- Select column --</option>
               ${csvHeaders.map((col) => `<option value="${col}" ${op.groupColumn === col ? 'selected' : ''}>${col}</option>`).join('')}
@@ -1147,12 +1144,12 @@ function renderOperations() {
             <span class="hint">CSV column containing group names or DNs</span>
           </div>
           <div class="form-group">
-            <label>Group DN Template</label>
+            <label>Group DN template</label>
             <input type="text" class="input" value="${op.groupDnTemplate}" onchange="updateOperation(${op.id}, 'groupDnTemplate', this.value)" placeholder="cn={value},ou=groups,dc=example,dc=com" />
             <span class="hint">Optional: Use {value} as placeholder to build full DNs from group names. Leave empty if CSV contains full DNs.</span>
           </div>
           <div class="form-group">
-            <label>Group Delimiter</label>
+            <label>Group delimiter</label>
             <input type="text" class="input" value="${op.groupDelimiter || ';'}" onchange="updateOperation(${op.id}, 'groupDelimiter', this.value)" placeholder=";" />
             <span class="hint">Character(s) to split multiple groups (e.g., ; or |)</span>
           </div>
@@ -1168,14 +1165,14 @@ function renderOperations() {
             </select>
           </div>
           <div class="form-group">
-            <label>Member Attribute</label>
+            <label>Member attribute</label>
             <select class="input" onchange="updateOperation(${op.id}, 'memberAttr', this.value)">
               <option value="member" ${op.memberAttr === 'member' ? 'selected' : ''}>member</option>
               <option value="uniqueMember" ${op.memberAttr === 'uniqueMember' ? 'selected' : ''}>uniqueMember</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Member Column</label>
+            <label>Member column</label>
             <select class="input" onchange="updateOperation(${op.id}, 'csvColumn', this.value)">
               ${csvHeaders.map((col) => `<option value="${col}" ${op.csvColumn === col ? 'selected' : ''}>${col}</option>`).join('')}
             </select>
@@ -1183,7 +1180,7 @@ function renderOperations() {
           </div>
         </div>
         <div class="form-group">
-          <label>Member DN Template</label>
+          <label>Member DN template</label>
           <input type="text" class="input" value="${op.memberDnTemplate}" onchange="updateOperation(${op.id}, 'memberDnTemplate', this.value)" placeholder="cn={value},cn=users,dc=example,dc=com" />
           <span class="hint">Use {value} as placeholder for the member column value</span>
         </div>
@@ -1207,7 +1204,7 @@ function renderOperations() {
             <span class="hint">CSV column that contains the user CN.</span>
           </div>
           <div class="form-group">
-            <label>Value Column</label>
+            <label>Value column</label>
             <select class="input" onchange="updateOperation(${op.id}, 'userValueColumn', this.value)">
               ${csvHeaders.map((col) => `<option value="${col}" ${op.userValueColumn === col ? 'selected' : ''}>${col}</option>`).join('')}
             </select>
@@ -1220,7 +1217,7 @@ function renderOperations() {
           <span class="hint">LDAP attribute to modify for each user DN.</span>
         </div>
         <div class="form-group">
-          <label>User DN Template</label>
+          <label>User DN template</label>
           <input type="text" class="input" value="${op.userDnTemplate}" onchange="updateOperation(${op.id}, 'userDnTemplate', this.value)" placeholder="cn={cn},cn=users,dc=example,dc=com" />
           <span class="hint">Use {cn} as placeholder for the CN column value.</span>
         </div>
@@ -1233,7 +1230,7 @@ function renderOperations() {
 
 function addOperation() {
   if (csvHeaders.length === 0) {
-    alert('Please upload a CSV file first');
+    window.ldifUi.showError('csvDropZone', 'Choose a CSV file before adding an operation.');
     return;
   }
 
@@ -1254,7 +1251,7 @@ function addOperation() {
     userAttrName: 'mail',
     userDnTemplate: 'cn={cn},cn=users,dc=example,dc=com'
   };
-  
+
   operations.push(newOp);
   renderOperations();
 }

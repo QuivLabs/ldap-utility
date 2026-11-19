@@ -38,7 +38,7 @@ class LdifToCsvConverter {
       // Process previous attribute if exists
       if (currentAttr && currentEntry) {
         let finalValue = currentValue;
-        
+
         // Decode base64 if needed
         if (isBase64) {
           try {
@@ -188,11 +188,11 @@ class LdifToCsvConverter {
     }
 
     const lines = [];
-    
+
     // Build header row considering split rules
     const headerColumns = [];
     const attributeProcessing = []; // Track how to process each column
-    
+
     selectedAttributes.forEach(attr => {
       const splitRule = this.splitRules.find(rule => rule.sourceColumn === attr);
       if (splitRule && splitRule.enabled) {
@@ -205,7 +205,7 @@ class LdifToCsvConverter {
         attributeProcessing.push({ type: 'normal', attribute: attr });
       }
     });
-    
+
     const headerRow = headerColumns.map(col => 
       this.escapeCsvValue(col, delimiter, quoteChar)
     );
@@ -214,16 +214,16 @@ class LdifToCsvConverter {
     // Data rows
     this.ldifData.forEach(entry => {
       const row = [];
-      
+
       selectedAttributes.forEach(attr => {
         const splitRule = this.splitRules.find(rule => rule.sourceColumn === attr);
-        
+
         if (splitRule && splitRule.enabled) {
           // Split the value
           const values = entry[attr] || [];
           const combinedValue = values.join(multiValueSeparator);
           const parts = combinedValue.split(splitRule.delimiter);
-          
+
           // Add each split part (or empty if not enough parts)
           for (let i = 0; i < splitRule.columnNames.length; i++) {
             const part = parts[i] || '';
@@ -236,7 +236,7 @@ class LdifToCsvConverter {
           row.push(this.escapeCsvValue(combinedValue, delimiter, quoteChar));
         }
       });
-      
+
       lines.push(row.join(delimiter));
     });
 
@@ -249,9 +249,9 @@ class LdifToCsvConverter {
    */
   escapeCsvValue(value, delimiter = ',', quoteChar = '"') {
     if (value === null || value === undefined) return '';
-    
+
     const strValue = String(value);
-    
+
     // Quote if contains delimiter, quotes, or newlines
     if (strValue.includes(delimiter) || 
         strValue.includes(quoteChar) || 
@@ -261,7 +261,7 @@ class LdifToCsvConverter {
       const escaped = strValue.replace(new RegExp(quoteChar, 'g'), quoteChar + quoteChar);
       return quoteChar + escaped + quoteChar;
     }
-    
+
     return strValue;
   }
 
@@ -326,7 +326,7 @@ class LdifToCsvConverter {
    */
   getSplitPreview(attribute, delimiter, limit = 5) {
     if (!this.ldifData || this.ldifData.length === 0) return [];
-    
+
     const samples = [];
     for (let i = 0; i < Math.min(limit, this.ldifData.length); i++) {
       const entry = this.ldifData[i];
@@ -437,6 +437,7 @@ class LdifToCsvUI {
 
   processFile(file) {
     const reader = new FileReader();
+    window.ldifUi.watchFileReader(reader, this.ldifStatus, this.ldifDropZone);
     reader.onload = (e) => {
       try {
         const ldifContent = e.target.result;
@@ -454,9 +455,9 @@ class LdifToCsvUI {
 
   handlePaste() {
     const ldifContent = this.ldifPasteArea.value.trim();
-    
+
     if (!ldifContent) {
-      alert('Please paste LDIF content first.');
+      window.ldifUi.showError('ldifPasteArea', 'Paste LDIF content before reading its attributes.');
       return;
     }
 
@@ -474,11 +475,11 @@ class LdifToCsvUI {
 
   processParsedLdif(ldifContent, sourceName) {
     this.converter.parseLdif(ldifContent);
-    
+
     const entryCount = this.converter.getEntryCount();
     this.ldifStatus.innerHTML = `<span class="status-success">✓ ${sourceName}</span> (${entryCount} entries)`;
     this.ldifStatus.classList.add('success');
-    
+
     this.renderAttributeSelection();
     this.updateButtonStates();
     this.preview.textContent = 'Select attributes and click "Convert to CSV" to see preview...';
@@ -486,7 +487,7 @@ class LdifToCsvUI {
 
   renderAttributeSelection() {
     const attributes = this.converter.getAvailableAttributes();
-    
+
     if (attributes.length === 0) {
       this.attributeHint.style.display = 'flex';
       this.attributeInterface.style.display = 'none';
@@ -499,11 +500,11 @@ class LdifToCsvUI {
     // Summary
     this.attributesSummary.innerHTML = `
       <div class="summary-item">
-        <span class="summary-label">Total Attributes:</span>
+        <span class="summary-label">Total attributes:</span>
         <span class="summary-value">${attributes.length}</span>
       </div>
       <div class="summary-item">
-        <span class="summary-label">Total Entries:</span>
+        <span class="summary-label">Total entries:</span>
         <span class="summary-value">${this.converter.getEntryCount()}</span>
       </div>
     `;
@@ -555,9 +556,9 @@ class LdifToCsvUI {
   updateButtonStates() {
     const hasData = this.converter.getEntryCount() > 0;
     const hasSelection = this.getSelectedAttributes().length > 0;
-    
+
     this.convertBtn.disabled = !(hasData && hasSelection);
-    
+
     // Show column split card only if data is loaded
     if (hasData) {
       this.columnSplitCard.style.display = 'block';
@@ -566,9 +567,9 @@ class LdifToCsvUI {
 
   showAddSplitRuleDialog() {
     const selectedAttrs = this.getSelectedAttributes();
-    
+
     if (selectedAttrs.length === 0) {
-      alert('Please select at least one attribute first.');
+      window.ldifUi.showError('attributeCheckboxes', 'Select at least one attribute before adding a split rule.');
       return;
     }
 
@@ -582,17 +583,17 @@ class LdifToCsvUI {
           </select>
         </div>
         <div class="form-group">
-          <label for="splitDelimiter">Split Delimiter</label>
+          <label for="splitDelimiter">Split delimiter</label>
           <input type="text" id="splitDelimiter" class="input" placeholder="e.g., , or | or -" value="," />
           <span class="hint">Character(s) used to split the value</span>
         </div>
         <div class="form-group">
-          <label for="splitColumnCount">Number of Columns</label>
+          <label for="splitColumnCount">Number of columns</label>
           <input type="number" id="splitColumnCount" class="input" value="2" min="2" max="10" />
           <span class="hint">How many columns to create from the split</span>
         </div>
         <div class="form-group">
-          <label>Column Names</label>
+          <label>Column names</label>
           <div id="splitColumnNames"></div>
         </div>
         <div class="form-group">
@@ -601,7 +602,7 @@ class LdifToCsvUI {
         </div>
         <div class="dialog-actions">
           <button class="btn btn-secondary" onclick="window.ldifToCsvUI.closeSplitDialog()">Cancel</button>
-          <button class="btn btn-primary" onclick="window.ldifToCsvUI.confirmSplitRule()">Add Rule</button>
+          <button class="btn btn-secondary" onclick="window.ldifToCsvUI.confirmSplitRule()">Add split rule</button>
         </div>
       </div>
     `;
@@ -623,7 +624,7 @@ class LdifToCsvUI {
       const count = parseInt(columnCountInput.value) || 2;
       const container = document.getElementById('splitColumnNames');
       container.innerHTML = '';
-      
+
       for (let i = 0; i < count; i++) {
         const input = document.createElement('input');
         input.type = 'text';
@@ -633,21 +634,21 @@ class LdifToCsvUI {
         input.dataset.index = i;
         container.appendChild(input);
       }
-      
+
       updatePreview();
     };
 
     const updatePreview = () => {
       const sourceColumn = document.getElementById('splitSourceColumn').value;
       const delimiter = document.getElementById('splitDelimiter').value;
-      
+
       if (!delimiter) {
         document.getElementById('splitPreview').innerHTML = '<em>Enter a delimiter to see preview</em>';
         return;
       }
 
       const samples = this.converter.getSplitPreview(sourceColumn, delimiter, 3);
-      
+
       if (samples.length === 0) {
         document.getElementById('splitPreview').innerHTML = '<em>No data available</em>';
         return;
@@ -659,7 +660,7 @@ class LdifToCsvUI {
         previewHtml += `<th>${name}</th>`;
       });
       previewHtml += '</tr></thead><tbody>';
-      
+
       samples.forEach(parts => {
         previewHtml += '<tr>';
         for (let i = 0; i < columnNames.length; i++) {
@@ -668,7 +669,7 @@ class LdifToCsvUI {
         }
         previewHtml += '</tr>';
       });
-      
+
       previewHtml += '</tbody></table>';
       document.getElementById('splitPreview').innerHTML = previewHtml;
     };
@@ -685,11 +686,11 @@ class LdifToCsvUI {
     if (dialog) {
       dialog.remove();
     }
-    
+
     // Show hidden rules again
     const existingRules = this.splitRulesContainer.querySelectorAll('.split-rule-item');
     existingRules.forEach(item => item.style.display = 'flex');
-    
+
     // Show empty state if no rules
     if (this.converter.splitRules.length === 0) {
       const emptyState = this.splitRulesContainer.querySelector('.empty-state-sm');
@@ -705,12 +706,12 @@ class LdifToCsvUI {
     const columnNames = Array.from(document.querySelectorAll('#splitColumnNames input')).map(inp => inp.value);
 
     if (!delimiter) {
-      alert('Please enter a delimiter.');
+      window.ldifUi.showError('splitDelimiter', 'Enter the delimiter that separates the column values.');
       return;
     }
 
     if (columnNames.some(name => !name.trim())) {
-      alert('Please provide names for all columns.');
+      window.ldifUi.showError('splitColumnNames', 'Enter a name for every output column.');
       return;
     }
 
@@ -747,10 +748,10 @@ class LdifToCsvUI {
         </div>
         <div class="split-rule-actions">
           <button class="btn-icon" onclick="window.ldifToCsvUI.editSplitRule(${rule.id})" title="Edit rule">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 5 5-12 12-6 1 1-6L16 3zM13 6l5 5"/></svg>
           </button>
           <button class="btn-icon" onclick="window.ldifToCsvUI.removeSplitRule(${rule.id})" title="Remove rule">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>
           </button>
         </div>
       `;
@@ -768,7 +769,7 @@ class LdifToCsvUI {
     if (!rule) return;
 
     const selectedAttrs = this.getSelectedAttributes();
-    
+
     // Create edit dialog HTML
     const dialogHtml = `
       <div class="split-rule-form">
@@ -779,17 +780,17 @@ class LdifToCsvUI {
           </select>
         </div>
         <div class="form-group">
-          <label for="splitDelimiter">Split Delimiter</label>
+          <label for="splitDelimiter">Split delimiter</label>
           <input type="text" id="splitDelimiter" class="input" placeholder="e.g., , or | or -" value="${rule.delimiter}" />
           <span class="hint">Character(s) used to split the value</span>
         </div>
         <div class="form-group">
-          <label for="splitColumnCount">Number of Columns</label>
+          <label for="splitColumnCount">Number of columns</label>
           <input type="number" id="splitColumnCount" class="input" value="${rule.columnNames.length}" min="2" max="10" />
           <span class="hint">How many columns to create from the split</span>
         </div>
         <div class="form-group">
-          <label>Column Names</label>
+          <label>Column names</label>
           <div id="splitColumnNames"></div>
         </div>
         <div class="form-group">
@@ -798,7 +799,7 @@ class LdifToCsvUI {
         </div>
         <div class="dialog-actions">
           <button class="btn btn-secondary" onclick="window.ldifToCsvUI.closeSplitDialog()">Cancel</button>
-          <button class="btn btn-primary" onclick="window.ldifToCsvUI.confirmEditSplitRule(${ruleId})">Save Changes</button>
+          <button class="btn btn-secondary" onclick="window.ldifToCsvUI.confirmEditSplitRule(${ruleId})">Save changes</button>
         </div>
       </div>
     `;
@@ -818,7 +819,7 @@ class LdifToCsvUI {
       const count = parseInt(columnCountInput.value) || 2;
       const container = document.getElementById('splitColumnNames');
       container.innerHTML = '';
-      
+
       for (let i = 0; i < count; i++) {
         const input = document.createElement('input');
         input.type = 'text';
@@ -828,21 +829,21 @@ class LdifToCsvUI {
         input.dataset.index = i;
         container.appendChild(input);
       }
-      
+
       updatePreview();
     };
 
     const updatePreview = () => {
       const sourceColumn = document.getElementById('splitSourceColumn').value;
       const delimiter = document.getElementById('splitDelimiter').value;
-      
+
       if (!delimiter) {
         document.getElementById('splitPreview').innerHTML = '<em>Enter a delimiter to see preview</em>';
         return;
       }
 
       const samples = this.converter.getSplitPreview(sourceColumn, delimiter, 3);
-      
+
       if (samples.length === 0) {
         document.getElementById('splitPreview').innerHTML = '<em>No data available</em>';
         return;
@@ -854,7 +855,7 @@ class LdifToCsvUI {
         previewHtml += `<th>${name}</th>`;
       });
       previewHtml += '</tr></thead><tbody>';
-      
+
       samples.forEach(parts => {
         previewHtml += '<tr>';
         for (let i = 0; i < columnNames.length; i++) {
@@ -863,7 +864,7 @@ class LdifToCsvUI {
         }
         previewHtml += '</tr>';
       });
-      
+
       previewHtml += '</tbody></table>';
       document.getElementById('splitPreview').innerHTML = previewHtml;
     };
@@ -881,12 +882,12 @@ class LdifToCsvUI {
     const columnNames = Array.from(document.querySelectorAll('#splitColumnNames input')).map(inp => inp.value);
 
     if (!delimiter) {
-      alert('Please enter a delimiter.');
+      window.ldifUi.showError('splitDelimiter', 'Enter the delimiter that separates the column values.');
       return;
     }
 
     if (columnNames.some(name => !name.trim())) {
-      alert('Please provide names for all columns.');
+      window.ldifUi.showError('splitColumnNames', 'Enter a name for every output column.');
       return;
     }
 
@@ -895,16 +896,16 @@ class LdifToCsvUI {
       delimiter,
       columnNames
     });
-    
+
     this.closeSplitDialog();
     this.renderSplitRules();
   }
 
   convert() {
     const selectedAttributes = this.getSelectedAttributes();
-    
+
     if (selectedAttributes.length === 0) {
-      this.preview.textContent = '⚠️ Please select at least one attribute to include in CSV';
+      window.ldifUi.showError('attributeCheckboxes', 'Select at least one attribute to include in the CSV.');
       return;
     }
 
@@ -916,7 +917,7 @@ class LdifToCsvUI {
 
     const csvOutput = this.converter.convertToCsv(selectedAttributes, options);
     this.preview.textContent = csvOutput;
-    
+
     // Calculate total columns (accounting for split rules)
     let totalColumns = selectedAttributes.length;
     this.converter.splitRules.forEach(rule => {
@@ -924,7 +925,7 @@ class LdifToCsvUI {
         totalColumns += (rule.columnNames.length - 1); // -1 because original column is replaced
       }
     });
-    
+
     // Show stats
     this.conversionStats.hidden = false;
     const splitInfo = this.converter.splitRules.length > 0 
@@ -954,22 +955,12 @@ class LdifToCsvUI {
   }
 
   copyToClipboard() {
-    const content = this.preview.textContent;
-    navigator.clipboard.writeText(content).then(() => {
-      // Visual feedback
-      const originalTitle = this.copyBtn.title;
-      this.copyBtn.title = 'Copied!';
-      setTimeout(() => {
-        this.copyBtn.title = originalTitle;
-      }, 2000);
-    }).catch(err => {
-      console.error('Failed to copy:', err);
-    });
+    if (this.converter.getCsvOutput()) window.ldifUi.copyText(this.preview.textContent, this.copyBtn);
   }
 
   reset() {
     this.converter.reset();
-    
+
     // Reset file input
     this.ldifInput.value = '';
     this.ldifStatus.textContent = 'No file selected';
@@ -993,8 +984,8 @@ class LdifToCsvUI {
 
     // Reset preview
     this.conversionStats.hidden = true;
-    this.preview.textContent = 'Upload an LDIF file and select attributes to see preview...';
-    
+    this.preview.textContent = 'Choose an LDIF file and select attributes to generate your CSV preview.';
+
     // Reset buttons
     this.convertBtn.disabled = true;
     this.downloadBtn.disabled = true;

@@ -405,6 +405,7 @@ function handleLdifUpload() {
   if (!file) return;
 
   const reader = new FileReader();
+  window.ldifUi.watchFileReader(reader, efLdifFileStatus, efLdifDropZone);
   reader.onload = (e) => {
     const blocks = fixer.loadSourceLdif(e.target.result);
     efLdifFileStatus.innerHTML = `<div class="file-info success">✓ Loaded ${blocks.length} entries</div>`;
@@ -515,7 +516,7 @@ function runFixAndRender() {
   efStatTotal.textContent = totalErrors;
   efStatFixed.textContent = fixedCount;
   efStatUnresolved.textContent = unresolvedCount;
-  efResultsInfo.textContent = `${fixedCount} auto-fixed · ${unresolvedCount} need manual review`;
+  efResultsInfo.textContent = `${fixedCount} fixed; ${unresolvedCount} need manual review`;
 
   renderIssuesList();
   efResults.classList.remove('hidden');
