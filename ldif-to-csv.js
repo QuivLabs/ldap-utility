@@ -443,12 +443,12 @@ class LdifToCsvUI {
         const ldifContent = e.target.result;
         this.processParsedLdif(ldifContent, file.name);
       } catch (error) {
-        this.ldifStatus.innerHTML = `<span class="status-error">✗ Error parsing file: ${error.message}</span>`;
+        this.ldifStatus.innerHTML = `<span class="status-error"><svg data-fluent="ErrorCircle-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1C11.866 1 15 4.13401 15 8C15 11.866 11.866 15 8 15C4.13401 15 1 11.866 1 8C1 4.13401 4.13401 1 8 1ZM8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2ZM8 10C8.41421 10 8.75 10.3358 8.75 10.75C8.75 11.1642 8.41421 11.5 8 11.5C7.58579 11.5 7.25 11.1642 7.25 10.75C7.25 10.3358 7.58579 10 8 10ZM8 4.5C8.24546 4.5 8.44985 4.67691 8.49219 4.91016L8.5 5V8.5C8.5 8.77614 8.27614 9 8 9C7.75454 9 7.55015 8.82309 7.50781 8.58984L7.5 8.5V5C7.5 4.72386 7.72386 4.5 8 4.5Z" fill="currentColor"/></svg> Error parsing file: ${error.message}</span>`;
         this.ldifStatus.classList.add('error');
       }
     };
     reader.onerror = () => {
-      this.ldifStatus.innerHTML = '<span class="status-error">✗ Error reading file</span>';
+      this.ldifStatus.innerHTML = '<span class="status-error"><svg data-fluent="ErrorCircle-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1C11.866 1 15 4.13401 15 8C15 11.866 11.866 15 8 15C4.13401 15 1 11.866 1 8C1 4.13401 4.13401 1 8 1ZM8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2ZM8 10C8.41421 10 8.75 10.3358 8.75 10.75C8.75 11.1642 8.41421 11.5 8 11.5C7.58579 11.5 7.25 11.1642 7.25 10.75C7.25 10.3358 7.58579 10 8 10ZM8 4.5C8.24546 4.5 8.44985 4.67691 8.49219 4.91016L8.5 5V8.5C8.5 8.77614 8.27614 9 8 9C7.75454 9 7.55015 8.82309 7.50781 8.58984L7.5 8.5V5C7.5 4.72386 7.72386 4.5 8 4.5Z" fill="currentColor"/></svg> Error reading file</span>';
     };
     reader.readAsText(file);
   }
@@ -464,7 +464,7 @@ class LdifToCsvUI {
     try {
       this.processParsedLdif(ldifContent, 'Pasted Content');
     } catch (error) {
-      this.ldifStatus.innerHTML = `<span class="status-error">✗ Error parsing LDIF: ${error.message}</span>`;
+      this.ldifStatus.innerHTML = `<span class="status-error"><svg data-fluent="ErrorCircle-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1C11.866 1 15 4.13401 15 8C15 11.866 11.866 15 8 15C4.13401 15 1 11.866 1 8C1 4.13401 4.13401 1 8 1ZM8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2ZM8 10C8.41421 10 8.75 10.3358 8.75 10.75C8.75 11.1642 8.41421 11.5 8 11.5C7.58579 11.5 7.25 11.1642 7.25 10.75C7.25 10.3358 7.58579 10 8 10ZM8 4.5C8.24546 4.5 8.44985 4.67691 8.49219 4.91016L8.5 5V8.5C8.5 8.77614 8.27614 9 8 9C7.75454 9 7.55015 8.82309 7.50781 8.58984L7.5 8.5V5C7.5 4.72386 7.72386 4.5 8 4.5Z" fill="currentColor"/></svg> Error parsing LDIF: ${error.message}</span>`;
       this.ldifStatus.classList.add('error');
     }
   }
@@ -477,7 +477,7 @@ class LdifToCsvUI {
     this.converter.parseLdif(ldifContent);
 
     const entryCount = this.converter.getEntryCount();
-    this.ldifStatus.innerHTML = `<span class="status-success">✓ ${sourceName}</span> (${entryCount} entries)`;
+    this.ldifStatus.innerHTML = `<span class="status-success"><svg data-fluent="CheckmarkCircle-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8ZM8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7.25 9.04289L5.85355 7.64645C5.65829 7.45118 5.34171 7.45118 5.14645 7.64645C4.95118 7.84171 4.95118 8.15829 5.14645 8.35355L6.89645 10.1036C7.09171 10.2988 7.40829 10.2988 7.60355 10.1036L10.8536 6.85355Z" fill="currentColor"/></svg> ${sourceName}</span> (${entryCount} entries)`;
     this.ldifStatus.classList.add('success');
 
     this.renderAttributeSelection();
@@ -739,7 +739,7 @@ class LdifToCsvUI {
         <div class="split-rule-content">
           <div class="split-rule-header">
             <strong>${rule.sourceColumn}</strong>
-            <span class="rule-arrow">→</span>
+            <span class="rule-arrow"><svg data-fluent="ArrowRight-20-regular" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.8371 3.13074C10.6332 2.94456 10.3169 2.95895 10.1307 3.16289C9.94456 3.36683 9.95895 3.68309 10.1629 3.86927L16.3307 9.5H2.5C2.22386 9.5 2 9.72386 2 10C2 10.2761 2.22386 10.5 2.5 10.5H16.3279L10.1629 16.1281C9.95895 16.3143 9.94456 16.6305 10.1307 16.8345C10.3169 17.0384 10.6332 17.0528 10.8371 16.8666L17.7535 10.5526C17.8934 10.4248 17.9732 10.2573 17.993 10.0841C17.9976 10.0568 18 10.0287 18 10C18 9.97313 17.9979 9.94675 17.9938 9.92103C17.9756 9.74512 17.8955 9.57446 17.7535 9.44478L10.8371 3.13074Z" fill="currentColor"/></svg></span>
             <span class="rule-columns">${rule.columnNames.join(', ')}</span>
           </div>
           <div class="split-rule-meta">
@@ -748,10 +748,10 @@ class LdifToCsvUI {
         </div>
         <div class="split-rule-actions">
           <button class="btn-icon" onclick="window.ldifToCsvUI.editSplitRule(${rule.id})" title="Edit rule">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 5 5-12 12-6 1 1-6L16 3zM13 6l5 5"/></svg>
+            <svg data-fluent="Edit-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.236 1.76406C13.2123 0.74037 11.5525 0.740369 10.5289 1.76406L2.65722 9.63568C2.28304 10.0099 2.01623 10.4777 1.88467 10.9902L1.01571 14.3757C0.971767 14.5469 1.02148 14.7286 1.14646 14.8536C1.27144 14.9785 1.45312 15.0282 1.62432 14.9843L5.00978 14.1153C5.52234 13.9838 5.99015 13.717 6.36433 13.3428L14.236 5.47117C15.2596 4.44748 15.2596 2.78775 14.236 1.76406ZM11.236 2.47117C11.8691 1.838 12.8957 1.838 13.5288 2.47117C14.162 3.10433 14.162 4.13089 13.5288 4.76406L12.75 5.54288L10.4571 3.24999L11.236 2.47117ZM9.75002 3.9571L12.0429 6.24999L5.65722 12.6357C5.40969 12.8832 5.10023 13.0597 4.76117 13.1467L2.19447 13.8055L2.85327 11.2388C2.9403 10.8998 3.1168 10.5903 3.36433 10.3428L9.75002 3.9571Z" fill="currentColor"/></svg>
           </button>
           <button class="btn-icon" onclick="window.ldifToCsvUI.removeSplitRule(${rule.id})" title="Remove rule">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>
+            <svg data-fluent="Delete-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 3H9C9 2.44772 8.55228 2 8 2C7.44772 2 7 2.44772 7 3ZM6 3C6 1.89543 6.89543 1 8 1C9.10457 1 10 1.89543 10 3H14C14.2761 3 14.5 3.22386 14.5 3.5C14.5 3.77614 14.2761 4 14 4H13.4364L12.2313 12.8378C12.0624 14.0765 11.0044 15 9.75422 15H6.24578C4.99561 15 3.93762 14.0765 3.76871 12.8378L2.56355 4H2C1.72386 4 1.5 3.77614 1.5 3.5C1.5 3.22386 1.72386 3 2 3H6ZM7 6.5C7 6.22386 6.77614 6 6.5 6C6.22386 6 6 6.22386 6 6.5V11.5C6 11.7761 6.22386 12 6.5 12C6.77614 12 7 11.7761 7 11.5V6.5ZM9.5 6C9.77614 6 10 6.22386 10 6.5V11.5C10 11.7761 9.77614 12 9.5 12C9.22386 12 9 11.7761 9 11.5V6.5C9 6.22386 9.22386 6 9.5 6ZM4.75954 12.7027C4.86089 13.4459 5.49568 14 6.24578 14H9.75422C10.5043 14 11.1391 13.4459 11.2405 12.7027L12.4272 4H3.57281L4.75954 12.7027Z" fill="currentColor"/></svg>
           </button>
         </div>
       `;
@@ -932,7 +932,7 @@ class LdifToCsvUI {
       ? ` (${this.converter.splitRules.length} split rule${this.converter.splitRules.length > 1 ? 's' : ''} applied)`
       : '';
     this.conversionStats.innerHTML = `
-      <strong>✓ Conversion complete:</strong> 
+      <strong><svg data-fluent="CheckmarkCircle-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8ZM8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7.25 9.04289L5.85355 7.64645C5.65829 7.45118 5.34171 7.45118 5.14645 7.64645C4.95118 7.84171 4.95118 8.15829 5.14645 8.35355L6.89645 10.1036C7.09171 10.2988 7.40829 10.2988 7.60355 10.1036L10.8536 6.85355Z" fill="currentColor"/></svg> Conversion complete:</strong>
       ${this.converter.getEntryCount()} entries × ${totalColumns} columns${splitInfo}
     `;
 

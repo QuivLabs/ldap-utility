@@ -311,7 +311,7 @@ function handleFixFileUpload() {
     cleaner.fixedEntries = cleaner.parseLdif(cleaner.fixLdifContent);
 
     const count = cleaner.fixedEntries.length;
-    fixFileStatus.innerHTML = `<div class="file-info success">✓ Loaded ${count} entries</div>`;
+    fixFileStatus.innerHTML = `<div class="file-info success"><svg data-fluent="CheckmarkCircle-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8ZM8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7.25 9.04289L5.85355 7.64645C5.65829 7.45118 5.34171 7.45118 5.14645 7.64645C4.95118 7.84171 4.95118 8.15829 5.14645 8.35355L6.89645 10.1036C7.09171 10.2988 7.40829 10.2988 7.60355 10.1036L10.8536 6.85355Z" fill="currentColor"/></svg> Loaded ${count} entries</div>`;
     fixOperationsSection.classList.remove('hidden');
 
     // Initialize first fix operation
@@ -334,13 +334,13 @@ function renderFixOperations() {
       <div class="operation-header">
         <h4>Fix #${idx + 1}</h4>
         ${idx > 0 ? `<button class="btn-icon danger" onclick="removeFixOperation(${idx})" aria-label="Remove update operation ${idx + 1}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>
+          <svg data-fluent="Delete-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 3H9C9 2.44772 8.55228 2 8 2C7.44772 2 7 2.44772 7 3ZM6 3C6 1.89543 6.89543 1 8 1C9.10457 1 10 1.89543 10 3H14C14.2761 3 14.5 3.22386 14.5 3.5C14.5 3.77614 14.2761 4 14 4H13.4364L12.2313 12.8378C12.0624 14.0765 11.0044 15 9.75422 15H6.24578C4.99561 15 3.93762 14.0765 3.76871 12.8378L2.56355 4H2C1.72386 4 1.5 3.77614 1.5 3.5C1.5 3.22386 1.72386 3 2 3H6ZM7 6.5C7 6.22386 6.77614 6 6.5 6C6.22386 6 6 6.22386 6 6.5V11.5C6 11.7761 6.22386 12 6.5 12C6.77614 12 7 11.7761 7 11.5V6.5ZM9.5 6C9.77614 6 10 6.22386 10 6.5V11.5C10 11.7761 9.77614 12 9.5 12C9.22386 12 9 11.7761 9 11.5V6.5C9 6.22386 9.22386 6 9.5 6ZM4.75954 12.7027C4.86089 13.4459 5.49568 14 6.24578 14H9.75422C10.5043 14 11.1391 13.4459 11.2405 12.7027L12.4272 4H3.57281L4.75954 12.7027Z" fill="currentColor"/></svg>
         </button>` : ''}
       </div>
       <div class="operation-body">
         <div class="operation-row">
           <div class="form-group">
-            <label>Field to Fix</label>
+            <label>Field to update</label>
             <input type="text" class="fix-field" value="${op.field}" placeholder="e.g., DN, objectClass, mail" />
           </div>
           <div class="form-group">
@@ -404,7 +404,7 @@ function renderRepeatableAttributes() {
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.setAttribute('aria-label', `Remove ${attr} from repeatable attributes`);
-    removeBtn.innerHTML = '&times;';
+    removeBtn.innerHTML = window.ldifIcons['Dismiss-16-regular'];
     removeBtn.addEventListener('click', () => {
       cleaner.repeatableAttributes.delete(cleaner.normalizeAttrName(attr));
       renderRepeatableAttributes();
@@ -537,7 +537,7 @@ function handleExtractFileUpload() {
     cleaner.extractedEntries = cleaner.parseLdif(cleaner.extractLdifContent);
 
     const count = cleaner.extractedEntries.length;
-    extractFileStatus.innerHTML = `<div class="file-info success">✓ Loaded ${count} entries</div>`;
+    extractFileStatus.innerHTML = `<div class="file-info success"><svg data-fluent="CheckmarkCircle-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8ZM8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7.25 9.04289L5.85355 7.64645C5.65829 7.45118 5.34171 7.45118 5.14645 7.64645C4.95118 7.84171 4.95118 8.15829 5.14645 8.35355L6.89645 10.1036C7.09171 10.2988 7.40829 10.2988 7.60355 10.1036L10.8536 6.85355Z" fill="currentColor"/></svg> Loaded ${count} entries</div>`;
 
     processDedup();
   };
@@ -579,7 +579,7 @@ function handleMasterFileUpload() {
     cleaner.masterEntries = cleaner.parseLdif(cleaner.masterLdifContent);
 
     const count = cleaner.masterEntries.length;
-    masterFileStatus.innerHTML = `<div class="file-info success">✓ Loaded ${count} entries</div>`;
+    masterFileStatus.innerHTML = `<div class="file-info success"><svg data-fluent="CheckmarkCircle-16-regular" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8ZM8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7.25 9.04289L5.85355 7.64645C5.65829 7.45118 5.34171 7.45118 5.14645 7.64645C4.95118 7.84171 4.95118 8.15829 5.14645 8.35355L6.89645 10.1036C7.09171 10.2988 7.40829 10.2988 7.60355 10.1036L10.8536 6.85355Z" fill="currentColor"/></svg> Loaded ${count} entries</div>`;
 
     processDedup();
   };

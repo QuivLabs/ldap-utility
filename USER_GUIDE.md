@@ -22,7 +22,7 @@ The repository also contains separate LDIF-to-CSV, LDIF Cleaner, and LDIF Error 
 ### Prerequisites
 
 - A modern desktop browser with JavaScript, the File API, and downloads enabled. Clipboard copy additionally depends on the browser's clipboard permission and secure-context rules; **Download LDIF** does not need clipboard access.
-- The repository files together in one folder. `csv-to-ldif.html` loads sibling `app.js`, `theme.js`, and `style.css`. No package installation, build, database, or server is required for conversion.
+- The repository files together in one folder, including `assets/`. `csv-to-ldif.html` loads `app.js`, `appearance.js`, `icons.js`, `theme.js`, and `style.css`. No package installation, build, database, or server is required for conversion.
 - A prepared CSV file and the target OUD suffix, existing parent entries, schema, bind account, and import procedure. OUD commands run separately on an administrator workstation or OUD host.
 
 From the repository directory on Windows PowerShell, open the converter:
@@ -40,6 +40,8 @@ python -m http.server 8000
 Then visit `http://localhost:8000/csv-to-ldif.html`. Python is only needed for this optional serving method. There is **no CSV-to-LDIF CLI command** in this repository; `node app.js` is not an execution path because the script expects the page's DOM.
 
 The conversion code uses the browser's file text reader and creates a local download. It contains no converter-side network request or OUD bind. As with any browser workflow, use an organization-approved browser and deployment location for directory data.
+
+Use **Ctrl+K** (Windows/Linux) or **Cmd+K** (macOS) to search tools and appearance actions. Arrow keys select a result, Enter opens it, and Escape closes the search. The top bar offers Light, Dark, and Follow system themes; the sidebar can collapse on desktop. Only these interface preferences are saved on this device. Files, mappings, and output are cleared when the page is reloaded or closed.
 
 ## 3. Input CSV contract
 
